@@ -4,8 +4,9 @@ import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
-// cc-agent 项目路径
-const CC_AGENT_PATH = '/Users/tibelf/Github/cc-agent'
+// 从环境变量读取配置，如果未设置则使用默认值
+const CC_AGENT_PATH = process.env.CC_AGENT_PATH || '/root/agent-platform/cc-agent'
+const PYTHON_CMD = process.env.PYTHON_CMD || 'python3.11'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,9 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '只允许执行taskctl.py命令' }, { status: 400 })
     }
 
-    console.log(`执行命令: ${command}`)
+    console.log(`执行命令: ${PYTHON_CMD} ${command} (路径: ${CC_AGENT_PATH})`)
     
-    const { stdout, stderr } = await execAsync(`cd ${CC_AGENT_PATH} && python ${command}`)
+    const { stdout, stderr } = await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} ${command}`)
     
     if (stderr) {
       console.warn('Command stderr:', stderr)
@@ -48,18 +49,23 @@ export async function POST(request: NextRequest) {
 // 健康检查端点
 export async function GET() {
   try {
-    const { stdout } = await execAsync(`cd ${CC_AGENT_PATH} && python taskctl.py --help`)
+    const { stdout } = await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py --help`)
+    
     return NextResponse.json({
       success: true,
-      available: true,
-      message: 'cc-agent CLI 可用'
+      message: 'CLI service is running',
+      ccAgentPath: CC_AGENT_PATH,
+      pythonCmd: PYTHON_CMD,
+      available: true
     })
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({
       success: false,
-      available: false,
-      message: 'cc-agent CLI 不可用',
-      error: error instanceof Error ? error.message : '未知错误'
-    })
+      message: 'CLI service is not available',
+      ccAgentPath: CC_AGENT_PATH,
+      pythonCmd: PYTHON_CMD,
+      error: error.message,
+      available: false
+    }, { status: 503 })
   }
 }

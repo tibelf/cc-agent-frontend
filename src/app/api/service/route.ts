@@ -4,8 +4,9 @@ import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
-// cc-agent 项目路径
-const CC_AGENT_PATH = '/Users/tibelf/Github/cc-agent'
+// 从环境变量读取配置
+const CC_AGENT_PATH = process.env.CC_AGENT_PATH || '/root/agent-platform/cc-agent'
+const PYTHON_CMD = process.env.PYTHON_CMD || 'python3.11'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,89 +23,48 @@ export async function POST(request: NextRequest) {
         try {
           // 检查是否已经在运行
           const { stdout: checkOutput } = await execAsync(
-            `cd ${CC_AGENT_PATH} && python taskctl.py system status`
+            `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
           )
           
           if (checkOutput.includes('Running')) {
             result = { 
               success: true, 
-              message: 'Auto-Claude 服务已经在运行',
-              status: 'running'
+              message: '服务已在运行', 
+              status: 'running' 
             }
           } else {
             // 启动服务
-            const startCommand = `cd ${CC_AGENT_PATH} && nohup python auto_claude.py > auto_claude.log 2>&1 &`
-            await execAsync(startCommand)
-            
-            // 等待一下让服务启动
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            
-            // 验证启动状态
-            const { stdout: verifyOutput } = await execAsync(
-              `cd ${CC_AGENT_PATH} && python taskctl.py system status`
+            await execAsync(
+              `cd ${CC_AGENT_PATH} && nohup ${PYTHON_CMD} auto_claude.py > /tmp/auto_claude.log 2>&1 &`
             )
-            
-            if (verifyOutput.includes('Running')) {
-              result = { 
-                success: true, 
-                message: 'Auto-Claude 服务启动成功',
-                status: 'running'
-              }
-            } else {
-              result = { 
-                success: false, 
-                message: '服务启动失败，请检查日志',
-                status: 'stopped'
-              }
+            result = { 
+              success: true, 
+              message: '服务启动成功', 
+              status: 'starting' 
             }
           }
         } catch (error: any) {
           result = { 
             success: false, 
-            message: `启动失败: ${error.message}`,
-            status: 'error'
+            message: `启动失败: ${error.message}`, 
+            status: 'error' 
           }
         }
         break
 
       case 'stop':
         try {
-          // 查找并终止 auto_claude.py 进程
-          const { stdout: psOutput } = await execAsync(
-            "ps aux | grep 'python.*auto_claude.py' | grep -v grep || true"
-          )
-          
-          if (psOutput.trim()) {
-            // 提取 PID 并终止进程
-            const lines = psOutput.trim().split('\n')
-            for (const line of lines) {
-              const parts = line.split(/\s+/)
-              if (parts.length > 1) {
-                const pid = parts[1]
-                await execAsync(`kill ${pid}`)
-              }
-            }
-            
-            // 等待进程完全终止
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            result = { 
-              success: true, 
-              message: 'Auto-Claude 服务已停止',
-              status: 'stopped'
-            }
-          } else {
-            result = { 
-              success: true, 
-              message: 'Auto-Claude 服务未在运行',
-              status: 'stopped'
-            }
+          await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system stop`)
+          result = { 
+            success: true, 
+            message: '服务停止成功', 
+            status: 'stopped' 
           }
         } catch (error: any) {
           result = { 
             success: false, 
-            message: `停止失败: ${error.message}`,
-            status: 'error'
+            message: `停止失败: ${error.message}`, 
+            status: 'error' 
           }
         }
         break
@@ -112,20 +72,19 @@ export async function POST(request: NextRequest) {
       case 'status':
         try {
           const { stdout } = await execAsync(
-            `cd ${CC_AGENT_PATH} && python taskctl.py system status`
+            `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
           )
-          
           const isRunning = stdout.includes('Running')
           result = { 
             success: true, 
-            message: isRunning ? 'Auto-Claude 服务运行中' : 'Auto-Claude 服务未运行',
-            status: isRunning ? 'running' : 'stopped'
+            message: stdout.trim(), 
+            status: isRunning ? 'running' : 'stopped' 
           }
         } catch (error: any) {
           result = { 
             success: false, 
-            message: `状态检查失败: ${error.message}`,
-            status: 'error'
+            message: `状态检查失败: ${error.message}`, 
+            status: 'unknown' 
           }
         }
         break
@@ -134,12 +93,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
 
   } catch (error: any) {
-    console.error('服务操作失败:', error)
-    
     return NextResponse.json({
       success: false,
       message: error.message || '操作失败',
       status: 'error'
     }, { status: 500 })
+  }
+}
+
+export async function GET() {
+  try {
+    const { stdout } = await execAsync(
+      `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
+    )
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Service API is available',
+      ccAgentPath: CC_AGENT_PATH,
+      pythonCmd: PYTHON_CMD,
+      status: stdout.trim()
+    })
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      message: 'Service API error',
+      error: error.message
+    }, { status: 503 })
   }
 }
