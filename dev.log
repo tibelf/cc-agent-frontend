@@ -1,0 +1,84 @@
+
+> cc-agent-frontend@0.1.0 dev
+> next dev
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/tibelf/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/tibelf/Github/cc-agent-frontend/package-lock.json
+
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://100.100.106.161:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1493ms
+ ○ Compiling / ...
+ ✓ Compiled / in 3s (921 modules)
+Dashboard data: {
+  pendingTasks: 0,
+  pendingLoading: true,
+  pendingError: undefined,
+  processingTasks: 0,
+  processingLoading: true,
+  processingError: undefined,
+  allCompletedTasks: 0,
+  completedLoading: true,
+  completedError: undefined,
+  completedTasks: 0,
+  allFailedTasks: 0,
+  failedLoading: true,
+  failedError: undefined,
+  failedTasks: 0
+}
+ GET / 200 in 3398ms
+ ○ Compiling /api/cli ...
+ ✓ Compiled /api/cli in 860ms (541 modules)
+ ✓ Compiled in 282ms (380 modules)
+执行命令: taskctl.py system status
+执行命令: taskctl.py task list --state pending --format json
+执行命令: taskctl.py task list --state processing --format json
+执行命令: taskctl.py task list --state completed --format json
+执行命令: taskctl.py task list --state failed --format json
+ GET /favicon.ico 200 in 1512ms
+ GET / 200 in 163ms
+ GET /favicon.ico 200 in 14ms
+ POST /api/cli 200 in 1770ms
+ POST /api/cli 200 in 1775ms
+ POST /api/cli 200 in 1777ms
+ POST /api/cli 200 in 1781ms
+ ○ Compiling /tasks/create ...
+ ✓ Compiled /tasks/create in 573ms (1126 modules)
+ GET /tasks/create 200 in 653ms
+ POST /api/cli 200 in 2763ms
+Dashboard data: {
+  pendingTasks: 0,
+  pendingLoading: true,
+  pendingError: undefined,
+  processingTasks: 0,
+  processingLoading: true,
+  processingError: undefined,
+  allCompletedTasks: 0,
+  completedLoading: true,
+  completedError: undefined,
+  completedTasks: 0,
+  allFailedTasks: 0,
+  failedLoading: true,
+  failedError: undefined,
+  failedTasks: 0
+}
+ GET / 200 in 670ms
+ GET /favicon.ico 200 in 91ms
+执行命令: taskctl.py system status
+执行命令: taskctl.py task list --state pending --format json
+执行命令: taskctl.py task list --state processing --format json
+执行命令: taskctl.py task list --state completed --format json
+执行命令: taskctl.py task list --state failed --format json
+ POST /api/cli 200 in 672ms
+ POST /api/cli 200 in 681ms
+ POST /api/cli 200 in 683ms
+ POST /api/cli 200 in 687ms
+ POST /api/cli 200 in 1678ms
