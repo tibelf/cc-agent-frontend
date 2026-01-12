@@ -17,7 +17,7 @@ export interface SecurityLog {
   user_agent: string
   timestamp: string
   success: boolean
-  details?: any
+  details?: Record<string, unknown>
 }
 
 export interface UserPermission {

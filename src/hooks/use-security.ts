@@ -1,12 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import SecurityService, { SecurityReport, SecurityLog, UserPermission, ApiKey } from '@/services/security'
+import SecurityService from '@/services/security'
+
+interface SecurityLogParams {
+  type?: string;
+  user?: string;
+  limit?: number;
+  offset?: number;
+}
 
 // Query Keys
 export const SECURITY_QUERY_KEYS = {
   all: ['security'] as const,
   report: () => [...SECURITY_QUERY_KEYS.all, 'report'] as const,
   logs: () => [...SECURITY_QUERY_KEYS.all, 'logs'] as const,
-  logsList: (params: any) => [...SECURITY_QUERY_KEYS.logs(), params] as const,
+  logsList: (params: SecurityLogParams | undefined) => [...SECURITY_QUERY_KEYS.logs(), params] as const,
   users: () => [...SECURITY_QUERY_KEYS.all, 'users'] as const,
   apiKeys: () => [...SECURITY_QUERY_KEYS.all, 'api-keys'] as const,
 }

@@ -1,11 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CLIService, CLITask, CLIScheduledTask } from '@/services/cli-service'
+import { CLIService } from '@/services/cli-service'
+
+interface TaskListParams {
+  state?: string;
+  priority?: string;
+  enabled?: boolean;
+}
 
 // Query Keys
 export const CLI_QUERY_KEYS = {
   all: ['cli'] as const,
   tasks: () => [...CLI_QUERY_KEYS.all, 'tasks'] as const,
-  taskList: (params?: any) => [...CLI_QUERY_KEYS.tasks(), 'list', params] as const,
+  taskList: (params?: TaskListParams) => [...CLI_QUERY_KEYS.tasks(), 'list', params] as const,
   task: (id: string) => [...CLI_QUERY_KEYS.tasks(), 'detail', id] as const,
   taskLogs: (id: string) => [...CLI_QUERY_KEYS.tasks(), 'logs', id] as const,
   scheduledTasks: () => [...CLI_QUERY_KEYS.all, 'scheduled-tasks'] as const,

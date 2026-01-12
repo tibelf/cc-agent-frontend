@@ -9,7 +9,6 @@ import {
   BarChart3,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Clock,
   RefreshCw,
   TrendingUp,
@@ -24,7 +23,7 @@ import {
   WifiOff,
   Loader2
 } from 'lucide-react'
-import { formatDateTime, formatDuration } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
 import { Alert, AlertLevel, SystemMetrics } from '@/types'
 import { useAlerts, useSystemMetrics, useResolveAlert } from '@/hooks/use-system'
 import { useWebSocket, useSystemMetrics as useRealtimeMetrics, useAlerts as useRealtimeAlerts } from '@/hooks/use-websocket'
@@ -103,11 +102,11 @@ export default function MonitoringPage() {
   const { metrics: realtimeMetrics, history: metricsHistory } = useRealtimeMetrics()
   
   // 实时告警
-  const { alerts: realtimeAlerts, markAllAsRead, removeAlert } = useRealtimeAlerts()
+  const { alerts: realtimeAlerts } = useRealtimeAlerts()
   
   // 静态数据（回退）
-  const { data: staticAlerts, isLoading: alertsLoading } = useAlerts()
-  const { data: staticMetrics, isLoading: metricsLoading } = useSystemMetrics(24)
+  const { data: staticAlerts } = useAlerts()
+  const { data: staticMetrics } = useSystemMetrics(24)
   const resolveAlertMutation = useResolveAlert()
 
   // 合并实时数据和静态数据
@@ -119,8 +118,9 @@ export default function MonitoringPage() {
     title: alert.title,
     message: alert.message,
     created_at: new Date(alert.timestamp).toISOString(),
+    resolved_at: undefined,
     metadata: {}
-  })) : (staticAlerts || mockAlerts)
+  })) : (staticAlerts?.data || mockAlerts)
   
   const metrics = metricsHistory.length > 0 ? metricsHistory.map(m => ({
     timestamp: new Date().toISOString(),
@@ -132,7 +132,7 @@ export default function MonitoringPage() {
     processing_tasks: m.activeTasks,
     failed_tasks: m.failedTasks,
     completed_tasks: m.completedTasks
-  })) : (staticMetrics || mockMetrics)
+  })) : (staticMetrics?.data || mockMetrics)
 
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h')
   const [alertsPage, setAlertsPage] = useState(1)
@@ -201,8 +201,8 @@ export default function MonitoringPage() {
       width: 100,
       align: 'center',
       render: (value) => (
-        <Badge className={getAlertLevelColor(value)}>
-          {getAlertLevelLabel(value)}
+        <Badge className={getAlertLevelColor(value as AlertLevel)}>
+          {getAlertLevelLabel(value as AlertLevel)}
         </Badge>
       )
     },
@@ -220,8 +220,8 @@ export default function MonitoringPage() {
       filterable: true,
       filterType: 'search',
       render: (value) => (
-        <div className="max-w-xs truncate" title={value}>
-          {value}
+        <div className="max-w-xs truncate" title={String(value)}>
+          {String(value)}
         </div>
       )
     },
@@ -230,7 +230,7 @@ export default function MonitoringPage() {
       title: '创建时间',
       sortable: true,
       width: 150,
-      render: (value) => formatDateTime(value)
+      render: (value) => formatDateTime(String(value))
     },
     {
       key: 'resolved_at',
@@ -244,7 +244,7 @@ export default function MonitoringPage() {
       ],
       width: 100,
       align: 'center',
-      render: (value, record) => (
+      render: (value) => (
         <Badge variant={value ? 'outline' : 'default'} className={value ? 'text-green-600 bg-green-100' : 'text-orange-600 bg-orange-100'}>
           {value ? '已解决' : '活跃'}
         </Badge>
@@ -491,8 +491,8 @@ export default function MonitoringPage() {
         </CardHeader>
         <CardContent>
           <Table
-            data={alerts}
-            columns={alertColumns}
+            data={alerts as Record<string, unknown>[]}
+            columns={alertColumns as TableColumn<Record<string, unknown>>[]}
             pagination={{
               page: alertsPage,
               pageSize: alertsPageSize,

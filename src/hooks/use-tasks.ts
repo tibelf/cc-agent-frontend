@@ -147,10 +147,7 @@ export function useRecentCompletedTasks(enabled: boolean = true) {
     enabled,
     staleTime: 60000,
     refetchInterval: 120000,
-    retry: 1, // Only retry once
-    onError: (error) => {
-      console.error('useRecentCompletedTasks error:', error)
-    }
+    retry: 1 // Only retry once
   })
 }
 
@@ -178,23 +175,25 @@ export function useOptimisticTaskUpdate() {
 
   return {
     updateTask: (taskId: string, updates: Partial<Task>) => {
-      queryClient.setQueryData(TASK_QUERY_KEYS.detail(taskId), (old: any) => {
-        if (!old?.data) return old
+      queryClient.setQueryData(TASK_QUERY_KEYS.detail(taskId), (old: unknown) => {
+        const data = old as { data?: Task } | undefined
+        if (!data?.data) return old
         return {
-          ...old,
-          data: { ...old.data, ...updates }
+          ...data,
+          data: { ...data.data, ...updates }
         }
       })
     },
 
     updateTaskInList: (params: ListTasksParams, taskId: string, updates: Partial<Task>) => {
-      queryClient.setQueryData(TASK_QUERY_KEYS.list(params), (old: any) => {
-        if (!old?.data?.items) return old
+      queryClient.setQueryData(TASK_QUERY_KEYS.list(params), (old: unknown) => {
+        const data = old as { data?: { items?: Task[] } } | undefined
+        if (!data?.data?.items) return old
         return {
-          ...old,
+          ...data,
           data: {
-            ...old.data,
-            items: old.data.items.map((task: Task) =>
+            ...data.data,
+            items: data.data.items.map((task: Task) =>
               task.id === taskId ? { ...task, ...updates } : task
             )
           }

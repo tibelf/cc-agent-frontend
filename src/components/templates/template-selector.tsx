@@ -1,17 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  FileText, 
-  Search, 
+import {
+  FileText,
+  Search,
   Clock,
-  ChevronRight,
-  X
+  ChevronRight
 } from 'lucide-react'
 import { TaskTemplate } from '@/types'
 import { useTaskTemplates } from '@/hooks/use-task-templates'

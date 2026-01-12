@@ -69,15 +69,17 @@ export class CLIService {
 
       console.log('CLI command result:', { command, outputLength: result.output?.length })
       return result.output
-    } catch (error: any) {
+    } catch (error) {
       console.error('Command execution failed:', error)
-      throw new Error(`命令执行失败: ${error.message}`)
+      const err = error as Error
+      throw new Error(`命令执行失败: ${err.message}`)
     }
   }
 
   /**
    * 解析 JSON 输出，如果不是 JSON 则返回原文本
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static parseOutput(output: string): any {
     if (!output || typeof output !== 'string') {
       console.warn('Empty or invalid output received:', output)
@@ -99,8 +101,10 @@ export class CLIService {
    * 解析系统状态文本输出
    * 主要检测 auto_claude.py worker 服务是否运行
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static parseSystemStatus(output: string): any {
     const lines = output.split('\n').filter(line => line.trim())
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status: any = {
       status: 'critical', // 默认为关键状态
       active_workers: 0,
@@ -163,6 +167,7 @@ export class CLIService {
   /**
    * 解析表格格式的输出（taskctl.py的默认输出格式）
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static parseTableOutput(output: string): any[] {
     const lines = output.split('\n').filter(line => line.trim())
     if (lines.length <= 2) return []
@@ -173,6 +178,7 @@ export class CLIService {
 
     return dataLines.map(line => {
       const values = line.split(/\s+/)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const obj: any = {}
       headers.forEach((header, index) => {
         obj[header.toLowerCase()] = values[index] || ''
@@ -252,8 +258,9 @@ export class CLIService {
       const taskId = taskIdMatch ? taskIdMatch[1] : undefined
 
       return { success: true, taskId }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, error: err.message }
     }
   }
 
@@ -275,8 +282,9 @@ export class CLIService {
       
       const output = await CLIService.executeCommand(command)
       return { success: true, message: output }
-    } catch (error: any) {
-      return { success: false, message: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, message: err.message }
     }
   }
 
@@ -297,6 +305,7 @@ export class CLIService {
   /**
    * 获取系统状态
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async getSystemStatus(): Promise<any> {
     try {
       const command = 'taskctl.py system status'
@@ -345,14 +354,16 @@ export class CLIService {
       const command = `taskctl.py worker restart ${workerId}`
       const output = await CLIService.executeCommand(command)
       return { success: true, message: output }
-    } catch (error: any) {
-      return { success: false, message: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, message: err.message }
     }
   }
 
   /**
    * 获取任务统计
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async getTaskStats(): Promise<any> {
     try {
       // 通过任务列表计算统计信息
@@ -445,8 +456,9 @@ export class CLIService {
       const taskId = taskIdMatch ? taskIdMatch[1] : undefined
 
       return { success: true, taskId }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, error: err.message }
     }
   }
 
@@ -458,8 +470,9 @@ export class CLIService {
       const command = `taskctl.py schedule remove ${taskId}`
       const output = await CLIService.executeCommand(command)
       return { success: true, message: output }
-    } catch (error: any) {
-      return { success: false, message: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, message: err.message }
     }
   }
 
@@ -472,8 +485,9 @@ export class CLIService {
       const command = `taskctl.py schedule ${action} ${taskId}`
       const output = await CLIService.executeCommand(command)
       return { success: true, message: output }
-    } catch (error: any) {
-      return { success: false, message: error.message }
+    } catch (error) {
+      const err = error as Error
+      return { success: false, message: err.message }
     }
   }
 }

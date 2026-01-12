@@ -158,7 +158,7 @@ export async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text)
     return true
-  } catch (err) {
+  } catch {
     // 备用方案
     const textArea = document.createElement('textarea')
     textArea.value = text
@@ -173,7 +173,7 @@ export async function copyToClipboard(text: string) {
 /**
  * 防抖函数
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: never[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -191,12 +191,12 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * 节流函数
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: never[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean
-  return function executedFunction(...args: Parameters<T>) {
+  return function executedFunction(this: unknown, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args)
       inThrottle = true

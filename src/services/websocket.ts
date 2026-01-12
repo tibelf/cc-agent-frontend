@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client'
 // WebSocket 消息类型定义
 export interface WebSocketMessage {
   type: string
-  data: any
+  data: unknown
   timestamp: number
 }
 
@@ -14,7 +14,7 @@ export interface TaskStatusMessage extends WebSocketMessage {
     taskId: string
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
     progress?: number
-    result?: any
+    result?: unknown
     error?: string
   }
 }
@@ -168,7 +168,7 @@ class WebSocketService {
       })
 
       // 消息处理
-      this.socket.onAny((eventName: string, data: any) => {
+      this.socket.onAny((eventName: string, data: unknown) => {
         this.handleMessage(eventName, data)
       })
 
@@ -225,7 +225,7 @@ class WebSocketService {
   }
 
   // 发送消息
-  send(event: string, data: any): void {
+  send(event: string, data: unknown): void {
     if (this.socket?.connected) {
       this.socket.emit(event, data)
     } else {
@@ -234,12 +234,12 @@ class WebSocketService {
   }
 
   // 处理接收到的消息
-  private handleMessage(event: string, data: any): void {
-    const message: WSMessage = {
-      type: event,
+  private handleMessage(event: string, data: unknown): void {
+    const message = {
+      type: event as WSMessage['type'],
       data,
       timestamp: Date.now()
-    }
+    } as WSMessage
 
     // 触发全局监听器
     const globalListeners = this.listeners.get('*')
@@ -349,6 +349,5 @@ class WebSocketService {
 // 创建全局WebSocket服务实例
 export const webSocketService = new WebSocketService()
 
-// 导出类和类型
+// 导出类
 export { WebSocketService }
-export type { WSMessage, WSEventListener, WebSocketConfig }

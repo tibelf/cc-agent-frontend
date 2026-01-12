@@ -5,11 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { 
   Settings,
   Check,
-  X,
   Eye,
   EyeOff
 } from 'lucide-react'
@@ -55,6 +53,7 @@ export function VariableForm({
     } else if (!isOpen) {
       resetForm()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template, isOpen])
 
   if (!template) return null
@@ -94,7 +93,7 @@ export function VariableForm({
             <Settings className="h-5 w-5" />
             <span>配置模版变量</span>
           </h2>
-          <p className="text-sm text-muted-foreground">为 "{template.name}" 填写变量值</p>
+          <p className="text-sm text-muted-foreground">为 &ldquo;{template.name}&rdquo; 填写变量值</p>
         </div>
 
         <div className="space-y-6">

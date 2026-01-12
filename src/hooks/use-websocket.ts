@@ -44,7 +44,7 @@ export function useWebSocket() {
     webSocketService.disconnect()
   }, [])
 
-  const send = useCallback((event: string, data: any) => {
+  const send = useCallback((event: string, data: unknown) => {
     webSocketService.send(event, data)
   }, [])
 
@@ -337,7 +337,7 @@ export function useMessageQueue<T extends WSMessage>(
 ) {
   const [messages, setMessages] = useState<T[]>([])
   const queueRef = useRef<T[]>([])
-  const timerRef = useRef<NodeJS.Timeout>()
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const flushQueue = useCallback(() => {
     if (queueRef.current.length > 0) {
@@ -353,7 +353,7 @@ export function useMessageQueue<T extends WSMessage>(
       flushQueue()
       if (timerRef.current) {
         clearTimeout(timerRef.current)
-        timerRef.current = undefined
+        timerRef.current = null
       }
     } else if (!timerRef.current) {
       timerRef.current = setTimeout(flushQueue, flushInterval)
@@ -376,7 +376,7 @@ export function useMessageQueue<T extends WSMessage>(
     queueRef.current = []
     if (timerRef.current) {
       clearTimeout(timerRef.current)
-      timerRef.current = undefined
+      timerRef.current = null
     }
   }, [])
 

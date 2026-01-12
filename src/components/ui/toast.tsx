@@ -284,16 +284,20 @@ export function SimpleToast({
 
 // Toast Hook的便捷方法
 export const toast = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   success: (message: string, options?: Partial<Omit<Toast, 'type' | 'message'>>) => {
     // 这个函数需要在ToastProvider内部使用
     console.warn('toast.success() can only be used inside ToastProvider. Use useToast() hook instead.')
   },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   error: (message: string, options?: Partial<Omit<Toast, 'type' | 'message'>>) => {
     console.warn('toast.error() can only be used inside ToastProvider. Use useToast() hook instead.')
   },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   warning: (message: string, options?: Partial<Omit<Toast, 'type' | 'message'>>) => {
     console.warn('toast.warning() can only be used inside ToastProvider. Use useToast() hook instead.')
   },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   info: (message: string, options?: Partial<Omit<Toast, 'type' | 'message'>>) => {
     console.warn('toast.info() can only be used inside ToastProvider. Use useToast() hook instead.')
   }

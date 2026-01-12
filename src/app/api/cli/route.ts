@@ -11,7 +11,7 @@ const PYTHON_CMD = process.env.PYTHON_CMD || 'python3.11'
 export async function POST(request: NextRequest) {
   try {
     const { command } = await request.json()
-    
+
     if (!command) {
       return NextResponse.json({ error: '命令不能为空' }, { status: 400 })
     }
@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`执行命令: ${PYTHON_CMD} ${command} (路径: ${CC_AGENT_PATH})`)
-    
+
     const { stdout, stderr } = await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} ${command}`)
-    
+
     if (stderr) {
       console.warn('Command stderr:', stderr)
     }
@@ -35,13 +35,13 @@ export async function POST(request: NextRequest) {
       error: stderr || null
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('命令执行失败:', error)
-    
+
     return NextResponse.json({
       success: false,
       output: '',
-      error: error.message || '命令执行失败'
+      error: error instanceof Error ? error.message : '命令执行失败'
     }, { status: 500 })
   }
 }
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
 // 健康检查端点
 export async function GET() {
   try {
-    const { stdout } = await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py --help`)
-    
+    await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py --help`)
+
     return NextResponse.json({
       success: true,
       message: 'CLI service is running',
@@ -58,13 +58,13 @@ export async function GET() {
       pythonCmd: PYTHON_CMD,
       available: true
     })
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({
       success: false,
       message: 'CLI service is not available',
       ccAgentPath: CC_AGENT_PATH,
       pythonCmd: PYTHON_CMD,
-      error: error.message,
+      error: error instanceof Error ? error.message : '未知错误',
       available: false
     }, { status: 503 })
   }

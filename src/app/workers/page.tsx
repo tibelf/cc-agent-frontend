@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,14 +8,11 @@ import {
   Users,
   RefreshCw,
   Play,
-  Pause,
   RotateCcw,
   Activity,
   Cpu,
   MemoryStick,
-  Clock,
   CheckCircle,
-  XCircle,
   AlertCircle,
   Server,
   Terminal,
@@ -23,7 +20,7 @@ import {
   WifiOff,
   Loader2
 } from 'lucide-react'
-import { formatDateTime, formatDuration, formatPercentage } from '@/lib/utils'
+import { formatDuration, formatPercentage } from '@/lib/utils'
 import { WorkerStatus, ProcessState } from '@/types'
 import { useWorkers, useRestartWorker } from '@/hooks/use-system'
 import { useWebSocket, useWorkerStatus } from '@/hooks/use-websocket'
@@ -57,9 +54,9 @@ const mockWorkers: WorkerStatus[] = [
   },
   {
     worker_id: 'worker_03',
-    process_id: null,
+    process_id: undefined,
     state: ProcessState.KILLED,
-    current_task_id: null,
+    current_task_id: undefined,
     last_heartbeat: new Date(Date.now() - 300000).toISOString(), // 5分钟前
     cpu_usage: 0,
     memory_usage: 0,
@@ -74,29 +71,27 @@ export default function WorkersPage() {
   const { connectionStatus, isConnected, connect } = useWebSocket()
   
   // 实时工作器状态
-  const { workersList: realtimeWorkers, onlineWorkers } = useWorkerStatus()
+  const { workersList: realtimeWorkers } = useWorkerStatus()
   
   // 静态数据（回退）
-  const { data: staticWorkers, isLoading, refetch } = useWorkers()
+  const { data: staticWorkers, isLoading } = useWorkers()
   const restartWorkerMutation = useRestartWorker()
 
   // 合并实时数据和静态数据
-  const workers = realtimeWorkers.length > 0 ? realtimeWorkers.map(worker => ({
+  const workers: WorkerStatus[] = realtimeWorkers.length > 0 ? realtimeWorkers.map(worker => ({
     worker_id: worker.workerId,
-    process_id: null, // 这个属性在WebSocket数据中没有
+    process_id: undefined, // 这个属性在WebSocket数据中没有
     state: worker.status === 'online' ? ProcessState.RUNNING :
            worker.status === 'busy' ? ProcessState.RUNNING :
            worker.status === 'idle' ? ProcessState.RUNNING : ProcessState.KILLED,
-    current_task_id: worker.currentTask || null,
+    current_task_id: worker.currentTask || undefined,
     last_heartbeat: new Date(worker.lastSeen).toISOString(),
     cpu_usage: 0, // 需要从其他数据源获取
     memory_usage: 0, // 需要从其他数据源获取
     uptime_seconds: Math.floor((Date.now() - worker.lastSeen) / 1000),
     tasks_completed: worker.performance.tasksCompleted,
     tasks_failed: Math.floor(worker.performance.tasksCompleted * worker.performance.errorRate)
-  })) : (staticWorkers || mockWorkers)
-
-  const [selectedWorker, setSelectedWorker] = useState<string | null>(null)
+  })) : ((staticWorkers?.data || mockWorkers) as WorkerStatus[])
   
   // 自动连接WebSocket
   useEffect(() => {

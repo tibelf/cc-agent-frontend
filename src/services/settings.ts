@@ -113,7 +113,13 @@ class SettingsService {
     status: 'success' | 'failed' | 'in_progress'
     path: string
   }>> {
-    const response = await apiClient.get(`${this.baseUrl}/backup/history`)
+    const response = await apiClient.get<Array<{
+      id: string
+      createdAt: string
+      size: number
+      status: 'success' | 'failed' | 'in_progress'
+      path: string
+    }>>(`${this.baseUrl}/backup/history`)
     return response.data
   }
 
@@ -143,7 +149,7 @@ class SettingsService {
 
   // 导出设置
   async exportSettings(): Promise<Blob> {
-    const response = await apiClient.get(`${this.baseUrl}/export`, {
+    const response = await apiClient.get<Blob>(`${this.baseUrl}/export`, {
       responseType: 'blob'
     })
     return response.data

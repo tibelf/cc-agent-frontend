@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { List, ListColumn } from '@/components/ui/list'
@@ -12,13 +12,11 @@ import {
   Pause,
   Square,
   RotateCcw,
-  Eye,
-  Trash2,
   RefreshCw
 } from 'lucide-react'
-import { formatDateTime, formatRelativeTime, formatBeijingDateTimeSimple, getTaskStateColor, getPriorityColor } from '@/lib/utils'
-import { TaskState, TaskPriority } from '@/types'
+import { formatBeijingDateTimeSimple, getTaskStateColor, getPriorityColor } from '@/lib/utils'
 import { useCLITasks, useCLITaskStats, useCLITaskAction, useCLIAvailability } from '@/hooks/use-cli-tasks'
+import type { CLITask } from '@/services/cli-service'
 
 const TASK_STATES = [
   { value: '', label: '全部状态' },
@@ -442,10 +440,10 @@ export default function TasksPage() {
       {/* 使用新的List组件 */}
       {isCliAvailable && (
         <List
-          data={tasks}
+          data={tasks as unknown as Record<string, unknown>[]}
           loading={tasksLoading}
-          columns={columns}
-          renderItem={(task) => renderTaskItem(task)}
+          columns={columns as unknown as ListColumn<Record<string, unknown>>[]}
+          renderItem={(task) => renderTaskItem(task as unknown as CLITask)}
           pagination={{
             page: currentPage,
             pageSize: pageSize,

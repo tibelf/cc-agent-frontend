@@ -495,7 +495,9 @@ export function DrawerFooter({ children, className }: ModalFooterProps) {
 // 模态框管理器（用于全局模态框状态管理）
 interface ModalState {
   id: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   component: React.ComponentType<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   props: any
 }
 
@@ -514,6 +516,7 @@ class ModalManager {
     this.listeners.forEach(listener => listener([...this.modals]))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   open(component: React.ComponentType<any>, props: any = {}) {
     const id = Math.random().toString(36).substr(2, 9)
     this.modals.push({ id, component, props })

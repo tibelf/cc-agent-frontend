@@ -13,7 +13,6 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  EyeOff,
   Settings,
   Lock,
   Unlock,
@@ -25,7 +24,7 @@ import {
   Server
 } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
-import { useSecurityReport, useSecurityLogs, useSecurityUsers, useApiKeys, useUnblockTask, useRevokeApiKey } from '@/hooks/use-security'
+import { useSecurityReport, useSecurityLogs, useSecurityUsers, useApiKeys } from '@/hooks/use-security'
 
 // 安全审计日志数据类型
 interface SecurityLog {
@@ -37,7 +36,7 @@ interface SecurityLog {
   user_agent: string
   timestamp: string
   success: boolean
-  details?: any
+  details?: Record<string, unknown>
 }
 
 // 用户权限数据类型
@@ -180,7 +179,7 @@ export default function SecurityPage() {
   const [showNewKeyForm, setShowNewKeyForm] = useState(false)
 
   // 使用真实数据 hooks
-  const { data: securityReportResponse, isLoading: reportLoading } = useSecurityReport()
+  const { data: securityReportResponse } = useSecurityReport()
   const { data: securityLogsResponse, isLoading: logsLoading } = useSecurityLogs({ limit: 50 })
   const { data: usersResponse, isLoading: usersLoading } = useSecurityUsers()
   const { data: apiKeysResponse, isLoading: keysLoading } = useApiKeys()
@@ -190,26 +189,6 @@ export default function SecurityPage() {
   const securityLogs = securityLogsResponse?.data?.items || mockSecurityLogs
   const users = usersResponse?.data || mockUsers
   const apiKeys = apiKeysResponse?.data || mockApiKeys
-  
-  // Mutations
-  const unblockTaskMutation = useUnblockTask()
-  const revokeApiKeyMutation = useRevokeApiKey()
-  
-  const handleUnblockTask = async (taskId: string, reason: string = 'Manually unblocked') => {
-    try {
-      await unblockTaskMutation.mutateAsync({ taskId, reason })
-    } catch (error) {
-      console.error('Failed to unblock task:', error)
-    }
-  }
-  
-  const handleRevokeApiKey = async (keyId: string) => {
-    try {
-      await revokeApiKeyMutation.mutateAsync(keyId)
-    } catch (error) {
-      console.error('Failed to revoke API key:', error)
-    }
-  }
 
   const getLogTypeIcon = (type: SecurityLog['type']) => {
     const icons = {
@@ -350,7 +329,7 @@ export default function SecurityPage() {
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
-              onClick={() => setActiveTab(key as any)}
+              onClick={() => setActiveTab(key as 'audit' | 'users' | 'keys' | 'settings')}
               className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === key
                   ? 'border-primary text-primary'

@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select } from '@/components/ui/select'
 import { TemplateSelector } from '@/components/templates/template-selector'
 import { VariableForm } from '@/components/templates/variable-form'
 import { 
@@ -20,7 +19,6 @@ import {
   CheckCircle,
   AlertCircle,
   Calendar,
-  Clock,
   FileText
 } from 'lucide-react'
 import { TaskType, TaskPriority, CreateTaskRequest, TaskTemplate } from '@/types'
@@ -255,10 +253,10 @@ provide specific instructions for manual completion instead of asking for confir
   }
 
   const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+    if (tagInput.trim() && !(formData.tags || []).includes(tagInput.trim())) {
       setFormData({
         ...formData,
-        tags: [...formData.tags, tagInput.trim()]
+        tags: [...(formData.tags || []), tagInput.trim()]
       })
       setTagInput('')
     }
@@ -267,7 +265,7 @@ provide specific instructions for manual completion instead of asking for confir
   const removeTag = (tagToRemove: string) => {
     setFormData({
       ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
+      tags: (formData.tags || []).filter(tag => tag !== tagToRemove)
     })
   }
 
@@ -276,7 +274,7 @@ provide specific instructions for manual completion instead of asking for confir
       setFormData({
         ...formData,
         environment: {
-          ...formData.environment,
+          ...(formData.environment || {}),
           [envKey.trim()]: envValue.trim()
         }
       })
@@ -286,7 +284,7 @@ provide specific instructions for manual completion instead of asking for confir
   }
 
   const removeEnvVar = (key: string) => {
-    const newEnv = { ...formData.environment }
+    const newEnv = { ...(formData.environment || {}) }
     delete newEnv[key]
     setFormData({
       ...formData,
@@ -605,9 +603,9 @@ provide specific instructions for manual completion instead of asking for confir
                     添加
                   </Button>
                 </div>
-                {formData.tags.length > 0 && (
+                {(formData.tags || []).length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {formData.tags.map((tag, index) => (
+                    {(formData.tags || []).map((tag, index) => (
                       <Badge key={index} variant="outline" className="cursor-pointer" onClick={() => removeTag(tag)}>
                         {tag} ×
                       </Badge>
@@ -638,9 +636,9 @@ provide specific instructions for manual completion instead of asking for confir
                     </Button>
                   </div>
                 </div>
-                {Object.keys(formData.environment).length > 0 && (
+                {Object.keys(formData.environment || {}).length > 0 && (
                   <div className="space-y-1">
-                    {Object.entries(formData.environment).map(([key, value]) => (
+                    {Object.entries(formData.environment || {}).map(([key, value]) => (
                       <div key={key} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
                         <span>{key} = {value}</span>
                         <button type="button" onClick={() => removeEnvVar(key)} className="text-red-500 hover:text-red-700">

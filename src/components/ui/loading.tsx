@@ -347,7 +347,5 @@ export function ImagePlaceholder({
 
 // 导出所有组件
 export {
-  LoadingButton as Button,
-  ContentLoading,
-  ImagePlaceholder
+  LoadingButton as Button
 }

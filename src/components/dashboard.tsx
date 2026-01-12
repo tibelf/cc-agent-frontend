@@ -10,7 +10,6 @@ import {
   CheckCircle, 
   XCircle, 
   Users, 
-  Server,
   Plus,
   RefreshCw,
   Power,
@@ -21,7 +20,7 @@ import {
   useCLISystemStatus,
   useCLIScheduledTasks
 } from '@/hooks/use-cli-tasks'
-import { formatBeijingDateTimeSimple, formatDuration, getSystemStatusColor, getPriorityColor } from '@/lib/utils'
+import { formatBeijingDateTimeSimple, formatDuration, getPriorityColor } from '@/lib/utils'
 import Link from 'next/link'
 
 // 模拟系统状态数据 - 在实际API完成后会被替换
@@ -143,12 +142,12 @@ export default function Dashboard() {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
   const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
   
-  const completedTasks = (allCompletedTasks || mockCompletedTasks).filter((task: any) => {
+  const completedTasks = (allCompletedTasks || mockCompletedTasks).filter((task: { completed_at?: string; created_at: string }) => {
     const completedAt = task.completed_at ? new Date(task.completed_at) : new Date(task.created_at)
     return completedAt >= twentyFourHoursAgo
   })
   
-  const failedTasks = (allFailedTasks || mockFailedTasks).filter((task: any) => {
+  const failedTasks = (allFailedTasks || mockFailedTasks).filter((task: { created_at: string }) => {
     const createdAt = new Date(task.created_at)
     return createdAt >= fiveDaysAgo
   })

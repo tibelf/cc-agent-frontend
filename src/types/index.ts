@@ -67,7 +67,7 @@ export interface Task {
     type: string;
     message: string;
   }>;
-  checkpoint_data: Record<string, any>;
+  checkpoint_data: Record<string, unknown>;
 }
 
 export interface CreateTaskRequest {
@@ -106,7 +106,7 @@ export interface Alert {
   worker_id?: string;
   created_at: string;
   resolved_at?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface SystemMetrics {
@@ -169,6 +169,7 @@ export interface CreateTemplateRequest {
 
 export interface UpdateTemplateRequest extends Partial<CreateTemplateRequest> {
   id: string;
+  usage_count?: number;
 }
 
 export interface ApplyTemplateRequest {
@@ -179,7 +180,7 @@ export interface ApplyTemplateRequest {
 // WebSocket 消息类型
 export interface WebSocketMessage {
   type: "task_updated" | "worker_status" | "system_alert" | "log_update";
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 

@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react'
 import { Button } from './button'
 import { Card, CardContent } from './card'
-import { Badge } from './badge'
 import { 
   ChevronUp, 
   ChevronDown, 
@@ -25,12 +24,12 @@ export interface ListColumn<T> {
   sortable?: boolean
   filterable?: boolean
   filterType?: 'select' | 'search' | 'date'
-  filterOptions?: { label: string; value: any }[]
+  filterOptions?: { label: string; value: unknown }[]
 }
 
 export interface ListFilter {
   column: string
-  value: any
+  value: unknown
   operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'gt' | 'lt' | 'between'
 }
 
@@ -69,11 +68,11 @@ export interface ListProps<T> {
   gridCols?: 1 | 2 | 3 | 4 | 6
 }
 
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj)
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce((current: unknown, key) => (current as Record<string, unknown>)?.[key], obj)
 }
 
-export function List<T extends Record<string, any>>({
+export function List<T extends Record<string, unknown>>({
   data,
   loading = false,
   columns = [],
@@ -96,6 +95,7 @@ export function List<T extends Record<string, any>>({
   const [currentLayout, setCurrentLayout] = useState<'list' | 'grid'>(layout)
 
   // 处理排序
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSort = (columnKey: string) => {
     const column = columns.find(col => col.key === columnKey)
     if (!column?.sortable) return
@@ -132,7 +132,7 @@ export function List<T extends Record<string, any>>({
   }
 
   // 处理选择筛选
-  const handleSelectFilter = (columnKey: string, value: any) => {
+  const handleSelectFilter = (columnKey: string, value: unknown) => {
     const newFilters = filters.filter(f => f.column !== columnKey)
     if (value !== '' && value !== null && value !== undefined) {
       newFilters.push({ 
@@ -193,8 +193,11 @@ export function List<T extends Record<string, any>>({
         const bValue = getNestedValue(b, currentSort.column)
         
         let comparison = 0
-        if (aValue < bValue) comparison = -1
-        else if (aValue > bValue) comparison = 1
+        // Type assertion for comparison
+        const a_val = aValue as string | number | Date
+        const b_val = bValue as string | number | Date
+        if (a_val < b_val) comparison = -1
+        else if (a_val > b_val) comparison = 1
         
         return currentSort.direction === 'desc' ? -comparison : comparison
       })
@@ -214,6 +217,7 @@ export function List<T extends Record<string, any>>({
     return processedData.slice(startIndex, endIndex)
   }, [processedData, pagination])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getSortIcon = (columnKey: string) => {
     if (!currentSort || currentSort.column !== columnKey) {
       return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
@@ -332,7 +336,7 @@ export function List<T extends Record<string, any>>({
                         >
                           <option value="">全部</option>
                           {column.filterOptions?.map((option) => (
-                            <option key={option.value} value={option.value}>
+                            <option key={String(option.value)} value={String(option.value)}>
                               {option.label}
                             </option>
                           ))}

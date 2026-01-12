@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { 
@@ -17,7 +17,6 @@ import {
   RefreshCw,
   Terminal,
   Clock,
-  User,
   Settings,
   Activity,
   AlertTriangle,
@@ -26,8 +25,8 @@ import {
   Loader2
 } from 'lucide-react'
 import { formatDateTime, formatRelativeTime, formatDuration, getTaskStateColor, getPriorityColor } from '@/lib/utils'
-import { Task, TaskState } from '@/types'
-import { useTask, useTaskLogs, useTaskAction } from '@/hooks/use-tasks'
+import { Task, TaskState, TaskType, TaskPriority, ProcessState } from '@/types'
+import { useTask, useTaskAction } from '@/hooks/use-tasks'
 import { useWebSocket, useTaskStatus, useTaskLogs as useRealtimeTaskLogs } from '@/hooks/use-websocket'
 import { ConnectionStatus } from '@/services/websocket'
 
@@ -36,10 +35,10 @@ const mockTask: Task = {
   id: 'task_001',
   name: '重构用户认证模块',
   description: '提高代码安全性，重构认证模块使其更加安全和易维护。这是一个复杂的重构任务，需要仔细处理现有的认证逻辑，确保不会破坏现有功能的同时提升系统安全性。',
-  task_type: 'medium_context',
-  priority: 'high',
+  task_type: TaskType.MEDIUM_CONTEXT,
+  priority: TaskPriority.HIGH,
   task_state: TaskState.PROCESSING,
-  process_state: 'running',
+  process_state: ProcessState.RUNNING,
   command: 'claude -p "请帮我重构用户认证模块，提高代码安全性" --permission-mode acceptEdits --allowedTools "Read" "Write" "Edit" "Git"',
   working_dir: '/path/to/project',
   environment: {
@@ -48,10 +47,8 @@ const mockTask: Task = {
   },
   auto_execute: true,
   confirmation_strategy: 'auto_yes',
-  interaction_timeout: 300,
   retry_count: 1,
   max_retries: 5,
-  resume_hint_file: 'resume_patch.txt',
   checkpoint_data: {
     session_id: 'session_abc123',
     last_saved: new Date().toISOString(),
@@ -59,11 +56,10 @@ const mockTask: Task = {
   },
   created_at: new Date(Date.now() - 3600000).toISOString(),
   started_at: new Date(Date.now() - 1800000).toISOString(),
-  next_allowed_at: null,
+  next_allowed_at: undefined,
   tags: ['认证', '安全', '重构', '高优先级'],
   assigned_worker: 'worker_01',
-  idempotency_keys: [],
-  last_error: null,
+  last_error: undefined,
   error_history: [
     {
       timestamp: new Date(Date.now() - 900000).toISOString(),
@@ -93,35 +89,34 @@ const mockLogs = [
 
 export default function TaskDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const taskId = params.id as string
 
   // WebSocket连接状态
   const { connectionStatus, isConnected, connect } = useWebSocket()
   
   // 获取任务基础数据
-  const { data: baseTask, isLoading } = useTask(taskId)
+  const { data: baseTask } = useTask(taskId)
   
   // 实时任务状态
   const { taskStatus: realtimeStatus } = useTaskStatus(taskId)
   
   // 实时日志流
-  const { logs: realtimeLogs, clearLogs, isAutoScroll, toggleAutoScroll, setIsAutoScroll } = useRealtimeTaskLogs(taskId)
+  const { logs: realtimeLogs, isAutoScroll, clearLogs, toggleAutoScroll } = useRealtimeTaskLogs(taskId)
   
   // 任务操作
   const taskActionMutation = useTaskAction()
 
   // 合并静态数据和实时数据
-  const task = baseTask ? {
-    ...baseTask,
+  const task = baseTask?.data ? {
+    ...baseTask.data,
     // 如果有实时状态更新，使用实时数据覆盖
     ...(realtimeStatus ? {
       task_state: realtimeStatus.status as TaskState,
       checkpoint_data: {
-        ...baseTask.checkpoint_data,
-        progress: realtimeStatus.progress || baseTask.checkpoint_data?.progress || 0
+        ...baseTask.data.checkpoint_data,
+        progress: realtimeStatus.progress || baseTask.data.checkpoint_data?.progress || 0
       },
-      last_error: realtimeStatus.error || baseTask.last_error
+      last_error: realtimeStatus.error || baseTask.data.last_error
     } : {})
   } : mockTask // 回退到模拟数据
   
@@ -149,11 +144,11 @@ export default function TaskDetailPage() {
     }
   }, [logs, isAutoScroll])
 
-  const handleTaskAction = async (action: string) => {
+  const handleTaskAction = async (action: 'cancel' | 'retry' | 'pause' | 'resume') => {
     try {
       await taskActionMutation.mutateAsync({
         taskId,
-        request: { action: action as any }
+        request: { action }
       })
     } catch (error) {
       console.error(`Failed to ${action} task:`, error)
@@ -352,18 +347,18 @@ export default function TaskDetailPage() {
                 </div>
               )}
               
-              {task.checkpoint_data?.progress && (
+              {typeof task.checkpoint_data?.progress === 'number' && task.checkpoint_data.progress > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-muted-foreground">进度</span>
                     <span className="text-sm font-medium">
-                      {Math.round(task.checkpoint_data.progress * 100)}%
+                      {Math.round((task.checkpoint_data.progress as number) * 100)}%
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${task.checkpoint_data.progress * 100}%` }}
+                      style={{ width: `${(task.checkpoint_data.progress as number) * 100}%` }}
                     />
                   </div>
                 </div>

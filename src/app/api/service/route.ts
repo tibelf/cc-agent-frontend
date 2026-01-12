@@ -11,7 +11,7 @@ const PYTHON_CMD = process.env.PYTHON_CMD || 'python3.11'
 export async function POST(request: NextRequest) {
   try {
     const { action } = await request.json()
-    
+
     if (!action || !['start', 'stop', 'status'].includes(action)) {
       return NextResponse.json({ error: '无效的操作' }, { status: 400 })
     }
@@ -25,29 +25,29 @@ export async function POST(request: NextRequest) {
           const { stdout: checkOutput } = await execAsync(
             `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
           )
-          
+
           if (checkOutput.includes('Running')) {
-            result = { 
-              success: true, 
-              message: '服务已在运行', 
-              status: 'running' 
+            result = {
+              success: true,
+              message: '服务已在运行',
+              status: 'running'
             }
           } else {
             // 启动服务
             await execAsync(
               `cd ${CC_AGENT_PATH} && nohup ${PYTHON_CMD} auto_claude.py > /tmp/auto_claude.log 2>&1 &`
             )
-            result = { 
-              success: true, 
-              message: '服务启动成功', 
-              status: 'starting' 
+            result = {
+              success: true,
+              message: '服务启动成功',
+              status: 'starting'
             }
           }
-        } catch (error: any) {
-          result = { 
-            success: false, 
-            message: `启动失败: ${error.message}`, 
-            status: 'error' 
+        } catch (error) {
+          result = {
+            success: false,
+            message: `启动失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            status: 'error'
           }
         }
         break
@@ -55,16 +55,16 @@ export async function POST(request: NextRequest) {
       case 'stop':
         try {
           await execAsync(`cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system stop`)
-          result = { 
-            success: true, 
-            message: '服务停止成功', 
-            status: 'stopped' 
+          result = {
+            success: true,
+            message: '服务停止成功',
+            status: 'stopped'
           }
-        } catch (error: any) {
-          result = { 
-            success: false, 
-            message: `停止失败: ${error.message}`, 
-            status: 'error' 
+        } catch (error) {
+          result = {
+            success: false,
+            message: `停止失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            status: 'error'
           }
         }
         break
@@ -75,16 +75,16 @@ export async function POST(request: NextRequest) {
             `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
           )
           const isRunning = stdout.includes('Running')
-          result = { 
-            success: true, 
-            message: stdout.trim(), 
-            status: isRunning ? 'running' : 'stopped' 
+          result = {
+            success: true,
+            message: stdout.trim(),
+            status: isRunning ? 'running' : 'stopped'
           }
-        } catch (error: any) {
-          result = { 
-            success: false, 
-            message: `状态检查失败: ${error.message}`, 
-            status: 'unknown' 
+        } catch (error) {
+          result = {
+            success: false,
+            message: `状态检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            status: 'error'
           }
         }
         break
@@ -92,10 +92,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result)
 
-  } catch (error: any) {
+  } catch (error) {
+    console.error('服务操作失败:', error)
+
     return NextResponse.json({
       success: false,
-      message: error.message || '操作失败',
+      message: error instanceof Error ? error.message : '操作失败',
       status: 'error'
     }, { status: 500 })
   }
@@ -106,7 +108,7 @@ export async function GET() {
     const { stdout } = await execAsync(
       `cd ${CC_AGENT_PATH} && ${PYTHON_CMD} taskctl.py system status`
     )
-    
+
     return NextResponse.json({
       success: true,
       message: 'Service API is available',
@@ -114,11 +116,11 @@ export async function GET() {
       pythonCmd: PYTHON_CMD,
       status: stdout.trim()
     })
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({
       success: false,
       message: 'Service API error',
-      error: error.message
+      error: error instanceof Error ? error.message : '未知错误'
     }, { status: 503 })
   }
 }

@@ -80,13 +80,13 @@ export class SystemService {
    * 获取系统配置
    */
   static async getSystemConfig() {
-    return apiClient.get<Record<string, any>>('/api/v1/system/config')
+    return apiClient.get<Record<string, unknown>>('/api/v1/system/config')
   }
 
   /**
    * 更新系统配置
    */
-  static async updateSystemConfig(config: Record<string, any>) {
+  static async updateSystemConfig(config: Record<string, unknown>) {
     return apiClient.put<{ success: boolean }>('/api/v1/system/config', config)
   }
 

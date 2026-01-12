@@ -124,7 +124,7 @@ export function useUpdateSystemConfig() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (config: Record<string, any>) => SystemService.updateSystemConfig(config),
+    mutationFn: (config: Record<string, unknown>) => SystemService.updateSystemConfig(config),
     onSuccess: () => {
       // Invalidate config data
       queryClient.invalidateQueries({ queryKey: SYSTEM_QUERY_KEYS.config() })

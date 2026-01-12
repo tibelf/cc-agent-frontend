@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import { ChevronDown } from "lucide-react"
 
 // Simple Select interface for basic HTML select
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SimpleSelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
