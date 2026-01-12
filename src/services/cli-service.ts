@@ -1,5 +1,6 @@
-// API 基础路径
-const API_BASE = '/api/cli'
+// API 基础路径 - 需要包含 basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+const API_BASE = `${basePath}/api/cli`
 
 export interface CLITask {
   id: string

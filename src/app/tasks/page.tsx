@@ -429,7 +429,7 @@ export default function TasksPage() {
               无法连接到cc-agent命令行工具。请确保：
             </p>
             <ul className="text-sm text-muted-foreground text-left max-w-md mx-auto space-y-1">
-              <li>• cc-agent项目位于: /Users/tibelf/Github/cc-agent</li>
+              <li>• cc-agent项目配置正确</li>
               <li>• Python环境已正确安装</li>
               <li>• taskctl.py可执行</li>
             </ul>
