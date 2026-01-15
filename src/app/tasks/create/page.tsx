@@ -339,29 +339,16 @@ provide specific instructions for manual completion instead of asking for confir
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* 基本信息 */}
           <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-              <CardDescription>任务的基本配置信息</CardDescription>
+            <CardHeader className="py-3">
+              <CardTitle className="text-base">基本信息</CardTitle>
+              <CardDescription className="text-xs">任务的基本配置信息</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 任务名称 */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  任务名称 <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  placeholder="例如：重构用户认证模块"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              {/* 任务描述 */}
+            <CardContent className="space-y-3 pt-0">
+                {/* 任务描述 */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-medium text-foreground">
@@ -379,7 +366,7 @@ provide specific instructions for manual completion instead of asking for confir
                 </div>
                 <Textarea
                   placeholder="详细描述要执行的任务内容..."
-                  rows={4}
+                  rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   required
@@ -391,16 +378,16 @@ provide specific instructions for manual completion instead of asking for confir
 
               {/* 优先级 */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
+                <label className="text-sm font-medium text-foreground mb-1 block">
                   优先级
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-4 gap-1">
                   {PRIORITIES.map((priority) => (
                     <button
                       key={priority.value}
                       type="button"
                       onClick={() => setFormData({ ...formData, priority: priority.value as TaskPriority })}
-                      className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                      className={`py-1.5 px-2 rounded border text-xs font-medium transition-colors ${
                         formData.priority === priority.value
                           ? priority.color + ' border-current'
                           : 'text-muted-foreground bg-background border-border hover:bg-accent'
@@ -412,15 +399,35 @@ provide specific instructions for manual completion instead of asking for confir
                 </div>
               </div>
 
-              {/* 定时任务开关 */}
-              <div>
-                <div className="flex items-center space-x-3 mb-3">
+              {/* 自动执行和定时任务并列 */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* 启用自动执行 */}
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="auto_execute"
+                    checked={formData.auto_execute}
+                    onChange={(e) => setFormData({ ...formData, auto_execute: e.target.checked })}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="auto_execute" className="text-sm font-medium text-foreground cursor-pointer">
+                      启用自动执行
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      任务将自动回答确认提示
+                    </p>
+                  </div>
+                </div>
+
+                {/* 定时任务 */}
+                <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     id="is_scheduled"
                     checked={formData.is_scheduled}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
+                    onChange={(e) => setFormData({
+                      ...formData,
                       is_scheduled: e.target.checked,
                       cron_expression: e.target.checked ? formData.cron_expression : ''
                     })}
@@ -436,9 +443,10 @@ provide specific instructions for manual completion instead of asking for confir
                     </p>
                   </div>
                 </div>
-                
-                {/* Cron表达式输入 */}
-                {formData.is_scheduled && (
+              </div>
+
+              {/* Cron表达式输入 */}
+              {formData.is_scheduled && (
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
@@ -483,84 +491,62 @@ provide specific instructions for manual completion instead of asking for confir
                     </div>
                   </div>
                 )}
-              </div>
             </CardContent>
           </Card>
 
           {/* 任务类型 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>任务类型</CardTitle>
-              <CardDescription>选择合适的任务类型以获得最佳性能</CardDescription>
+          <Card className="flex flex-col">
+            <CardHeader className="py-3">
+              <CardTitle className="text-base">任务类型</CardTitle>
+              <CardDescription className="text-xs">选择合适的任务类型以获得最佳性能</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex-1 flex flex-col justify-between gap-2 pt-0">
               {TASK_TYPES.map((type) => (
-                <div key={type.value}>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, task_type: type.value as TaskType })}
-                    className={`w-full p-4 rounded-lg border text-left transition-colors ${
-                      formData.task_type === type.value
-                        ? type.color + ' border-current'
-                        : 'bg-background border-border hover:bg-accent'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium">{type.label}</h3>
-                      {formData.task_type === type.value && (
-                        <CheckCircle className="h-5 w-5 text-current" />
-                      )}
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, task_type: type.value as TaskType })}
+                  className={`w-full p-2.5 rounded-lg border text-left transition-colors flex-1 flex flex-col justify-center ${
+                    formData.task_type === type.value
+                      ? type.color + ' border-current'
+                      : 'bg-background border-border hover:bg-accent'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-sm">{type.label}</h3>
+                      <span className="text-xs text-muted-foreground">{type.description}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {type.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    {formData.task_type === type.value && (
+                      <CheckCircle className="h-4 w-4 text-current flex-shrink-0" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <div className="flex flex-wrap gap-1">
                       {type.permissions.map((permission, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge key={index} variant="outline" className="text-[10px] px-1.5 py-0">
                           {permission}
                         </Badge>
                       ))}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground">
                       适用于: {type.examples.join('、')}
-                    </div>
-                  </button>
-                </div>
+                    </span>
+                  </div>
+                </button>
               ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* 自动执行选项 */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="auto_execute"
-                checked={formData.auto_execute}
-                onChange={(e) => setFormData({ ...formData, auto_execute: e.target.checked })}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <div className="flex-1">
-                <label htmlFor="auto_execute" className="text-sm font-medium text-foreground cursor-pointer">
-                  启用自动执行
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  任务将自动回答确认提示，无需人工干预
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 高级配置 */}
         <Card>
-          <CardHeader>
+          <CardHeader className="py-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>高级配置</CardTitle>
-                <CardDescription>可选的高级任务配置</CardDescription>
+                <CardTitle className="text-base">高级配置</CardTitle>
+                <CardDescription className="text-xs">可选的高级任务配置</CardDescription>
               </div>
               <Button
                 type="button"
@@ -574,7 +560,7 @@ provide specific instructions for manual completion instead of asking for confir
             </div>
           </CardHeader>
           {showAdvanced && (
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 pt-0">
               {/* 工作目录 */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
@@ -655,14 +641,14 @@ provide specific instructions for manual completion instead of asking for confir
 
         {/* 生成的命令预览 */}
         <Card>
-          <CardHeader>
+          <CardHeader className="py-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center space-x-2">
-                  <Wand2 className="h-5 w-5" />
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Wand2 className="h-4 w-4" />
                   <span>生成的Claude命令</span>
                 </CardTitle>
-                <CardDescription>系统将自动生成以下命令</CardDescription>
+                <CardDescription className="text-xs">系统将自动生成以下命令</CardDescription>
               </div>
               <Button
                 type="button"
@@ -675,8 +661,8 @@ provide specific instructions for manual completion instead of asking for confir
             </div>
           </CardHeader>
           {showGeneratedCommand && (
-            <CardContent>
-              <div className="bg-muted p-4 rounded-lg">
+            <CardContent className="pt-0">
+              <div className="bg-muted p-3 rounded-lg">
                 <code className="text-sm whitespace-pre-wrap break-all">
                   {generateCommand() || '请先填写任务名称和描述'}
                 </code>
