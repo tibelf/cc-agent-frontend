@@ -13,6 +13,7 @@ import {
   FileText
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LogoutButton } from '@/components/logout-button'
 
 const navigation = [
   {
@@ -110,8 +111,11 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="flex-shrink-0 px-4 py-4 border-t border-border">
-        <div className="text-xs text-muted-foreground text-center">
-          CC-Agent Frontend v1.0.0
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            CC-Agent v1.0.0
+          </div>
+          <LogoutButton variant="ghost" showText={false} />
         </div>
       </div>
     </div>

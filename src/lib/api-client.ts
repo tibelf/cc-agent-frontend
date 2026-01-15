@@ -84,8 +84,12 @@ class ApiClient {
   private handleUnauthorized() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
-      // Redirect to login page if needed
-      // window.location.href = '/login'
+      // 清除 cookie
+      document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      // 重定向到登录页
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+      const currentPath = window.location.pathname
+      window.location.href = `${basePath}/login?redirect=${encodeURIComponent(currentPath)}`
     }
   }
 
