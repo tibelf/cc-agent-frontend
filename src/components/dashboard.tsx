@@ -22,6 +22,7 @@ import {
 } from '@/hooks/use-cli-tasks'
 import { formatBeijingDateTimeSimple, formatDuration, getPriorityColor } from '@/lib/utils'
 import Link from 'next/link'
+import { toast } from '@/components/ui/sonner'
 
 // 模拟系统状态数据 - 在实际API完成后会被替换
 const mockSystemStatus = {
@@ -188,34 +189,10 @@ export default function Dashboard() {
         refetchScheduled()
       ])
       
-      // 显示成功反馈
-      const successToast = document.createElement('div')
-      successToast.className = 'fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg transition-opacity duration-300'
-      successToast.innerHTML = '✓ 数据刷新成功'
-      document.body.appendChild(successToast)
-      
-      setTimeout(() => {
-        successToast.style.opacity = '0'
-        setTimeout(() => {
-          document.body.removeChild(successToast)
-        }, 300)
-      }, 2000)
-      
+      toast.success('数据刷新成功')
     } catch (error) {
       console.error('刷新数据失败:', error)
-      
-      // 显示失败反馈
-      const errorToast = document.createElement('div')
-      errorToast.className = 'fixed top-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg transition-opacity duration-300'
-      errorToast.innerHTML = '✗ 数据刷新失败'
-      document.body.appendChild(errorToast)
-      
-      setTimeout(() => {
-        errorToast.style.opacity = '0'
-        setTimeout(() => {
-          document.body.removeChild(errorToast)
-        }, 300)
-      }, 3000)
+      toast.error('数据刷新失败')
     } finally {
       setIsRefreshing(false)
     }
@@ -262,13 +239,13 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <Switch 
+                  <Switch
                     checked={systemStatus.status === 'healthy'}
                     disabled={isTogglingService || systemLoading}
                     onCheckedChange={handleServiceToggle}
-                    className={systemStatus.status === 'healthy' 
-                      ? 'data-[state=checked]:bg-green-600' 
-                      : 'data-[state=unchecked]:bg-red-200'
+                    className={systemStatus.status === 'healthy'
+                      ? 'data-[state=checked]:bg-success'
+                      : 'data-[state=unchecked]:bg-destructive/30'
                     }
                   />
                   {isTogglingService && (
@@ -279,9 +256,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div className={`text-sm font-medium ${
-                    systemStatus.status === 'healthy' 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
+                    systemStatus.status === 'healthy'
+                      ? 'text-success'
+                      : 'text-destructive'
                   }`}>
                     {isTogglingService 
                       ? (systemStatus.status === 'healthy' ? '正在停止...' : '正在启动...')
@@ -333,7 +310,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <Clock className="h-5 w-5 text-warning" />
               <span>待处理任务</span>
               <Badge variant="outline">{pendingTasks.length}</Badge>
             </CardTitle>
@@ -395,7 +372,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-purple-500" />
+              <Calendar className="h-5 w-5 text-info" />
               <span>定时任务</span>
               <Badge variant="outline">{scheduledTasks.length}</Badge>
             </CardTitle>
@@ -414,7 +391,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 scheduledTasks.map((task) => (
-                  <div key={task.task_id} className="flex items-center justify-between p-3 rounded-lg border border-purple-200 bg-purple-50/50 hover:border-purple-300 transition-colors">
+                  <div key={task.task_id} className="flex items-center justify-between p-3 rounded-lg border border-info/30 bg-info/10 hover:border-info/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="font-medium truncate">
@@ -431,9 +408,9 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Badge className={task.enabled 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-gray-100 text-gray-600"
+                      <Badge className={task.enabled
+                        ? "bg-success/20 text-success-foreground"
+                        : "bg-muted text-muted-foreground"
                       }>
                         {task.enabled ? '已启用' : '已禁用'}
                       </Badge>
@@ -458,7 +435,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />
+              <RefreshCw className="h-5 w-5 text-info animate-spin" />
               <span>处理中任务</span>
               <Badge variant="outline">{processingTasks.length}</Badge>
             </CardTitle>
@@ -477,7 +454,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 processingTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-blue-200 bg-blue-50/50 hover:border-blue-300 transition-colors">
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-info/30 bg-info/10 hover:border-info/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <Link href={`/tasks/${task.id}`}>
@@ -499,7 +476,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Badge className="bg-blue-100 text-blue-800">
+                      <Badge className="bg-info/20 text-info-foreground">
                         执行中
                       </Badge>
                     </div>
@@ -525,7 +502,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-success" />
               <span>已完成任务</span>
               <Badge variant="outline">{completedTasks.length}</Badge>
             </CardTitle>
@@ -539,7 +516,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 completedTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-green-200 bg-green-50/50 hover:border-green-300 transition-colors">
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-success/30 bg-success/10 hover:border-success/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <Link href={`/tasks/${task.id}`}>
@@ -555,7 +532,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Badge className="bg-green-100 text-green-800">
+                      <Badge className="bg-success/20 text-success-foreground">
                         已完成
                       </Badge>
                     </div>
@@ -579,7 +556,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <XCircle className="h-5 w-5 text-red-500" />
+              <XCircle className="h-5 w-5 text-destructive" />
               <span>失败任务</span>
               <Badge variant="outline">{failedTasks.length}</Badge>
             </CardTitle>
@@ -593,7 +570,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 failedTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50/50 hover:border-red-300 transition-colors">
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-destructive/30 bg-destructive/10 hover:border-destructive/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <Link href={`/tasks/${task.id}`}>
@@ -609,7 +586,7 @@ export default function Dashboard() {
                         {task.last_error && (
                           <>
                             <span>•</span>
-                            <span className="text-red-600 truncate" title={task.last_error}>
+                            <span className="text-destructive truncate" title={task.last_error}>
                               {task.last_error.length > 30 ? task.last_error.substring(0, 30) + '...' : task.last_error}
                             </span>
                           </>
@@ -617,7 +594,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Badge className="bg-red-100 text-red-800">
+                      <Badge className="bg-destructive/20 text-destructive-foreground">
                         失败
                       </Badge>
                     </div>

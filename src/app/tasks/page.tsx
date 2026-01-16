@@ -17,6 +17,7 @@ import {
 import { formatBeijingDateTimeSimple, getTaskStateColor, getPriorityColor } from '@/lib/utils'
 import { useCLITasks, useCLITaskStats, useCLITaskAction, useCLIAvailability } from '@/hooks/use-cli-tasks'
 import type { CLITask } from '@/services/cli-service'
+import { toast } from '@/components/ui/sonner'
 
 const TASK_STATES = [
   { value: '', label: '全部状态' },
@@ -115,34 +116,10 @@ export default function TasksPage() {
         refetchStats()
       ])
       
-      // 显示成功反馈
-      const successToast = document.createElement('div')
-      successToast.className = 'fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg transition-opacity duration-300'
-      successToast.innerHTML = '✓ 数据刷新成功'
-      document.body.appendChild(successToast)
-      
-      setTimeout(() => {
-        successToast.style.opacity = '0'
-        setTimeout(() => {
-          document.body.removeChild(successToast)
-        }, 300)
-      }, 2000)
-      
+      toast.success('数据刷新成功')
     } catch (error) {
       console.error('刷新数据失败:', error)
-      
-      // 显示失败反馈
-      const errorToast = document.createElement('div')
-      errorToast.className = 'fixed top-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg transition-opacity duration-300'
-      errorToast.innerHTML = '✗ 数据刷新失败'
-      document.body.appendChild(errorToast)
-      
-      setTimeout(() => {
-        errorToast.style.opacity = '0'
-        setTimeout(() => {
-          document.body.removeChild(errorToast)
-        }, 300)
-      }, 3000)
+      toast.error('数据刷新失败')
     } finally {
       setIsRefreshing(false)
     }
@@ -255,14 +232,14 @@ export default function TasksPage() {
 
             {/* Error Message */}
             {task.last_error && (
-              <div className="text-xs text-red-600 bg-red-50 p-2 rounded mb-3">
+              <div className="text-xs text-destructive bg-destructive/10 p-2 rounded mb-3">
                 错误: {task.last_error}
               </div>
             )}
 
             {/* Wait Time */}
             {task.next_allowed_at && new Date(task.next_allowed_at) > new Date() && (
-              <div className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded mb-3">
+              <div className="text-xs text-warning bg-warning/10 p-2 rounded mb-3">
                 等待至: {formatBeijingDateTimeSimple(task.next_allowed_at)}
               </div>
             )}
@@ -419,12 +396,12 @@ export default function TasksPage() {
       {!checkingCli && isCliAvailable === false && (
         <Card>
           <CardContent className="pt-6 text-center py-8">
-            <div className="text-red-600 mb-4">
+            <div className="text-destructive mb-4">
               <svg className="h-12 w-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-red-600 mb-2">cc-agent 不可用</h3>
+            <h3 className="text-lg font-semibold text-destructive mb-2">cc-agent 不可用</h3>
             <p className="text-muted-foreground mb-4">
               无法连接到cc-agent命令行工具。请确保：
             </p>

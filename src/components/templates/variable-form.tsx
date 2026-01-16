@@ -3,9 +3,16 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Modal } from '@/components/ui/modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { 
+import {
   Settings,
   Check,
   Eye,
@@ -20,11 +27,11 @@ interface VariableFormProps {
   onApplyTemplate: (renderedDescription: string) => void
 }
 
-export function VariableForm({ 
-  isOpen, 
-  onClose, 
-  template, 
-  onApplyTemplate 
+export function VariableForm({
+  isOpen,
+  onClose,
+  template,
+  onApplyTemplate
 }: VariableFormProps) {
   const [variables, setVariables] = useState<Record<string, string>>({})
   const [showPreview, setShowPreview] = useState(false)
@@ -61,12 +68,12 @@ export function VariableForm({
   // 渲染模版预览
   const renderPreview = () => {
     let preview = template.prompt_template
-    
+
     for (const [varName, varValue] of Object.entries(variables)) {
       const placeholder = `{{${varName}}}`
       preview = preview.replace(new RegExp(placeholder, 'g'), varValue || `{{${varName}}}`)
     }
-    
+
     return preview
   }
 
@@ -78,7 +85,7 @@ export function VariableForm({
   // 应用模版
   const handleApply = () => {
     if (!isFormValid()) return
-    
+
     const renderedDescription = renderPreview()
     onApplyTemplate(renderedDescription)
     onClose()
@@ -86,15 +93,15 @@ export function VariableForm({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
-      <div className="p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
             <Settings className="h-5 w-5" />
             <span>配置模版变量</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">为 &ldquo;{template.name}&rdquo; 填写变量值</p>
-        </div>
+          </DialogTitle>
+          <DialogDescription>为 &ldquo;{template.name}&rdquo; 填写变量值</DialogDescription>
+        </DialogHeader>
 
         <div className="space-y-6">
           {/* 模版信息 */}
@@ -117,7 +124,7 @@ export function VariableForm({
               {template.variables.map((varName) => (
                 <div key={varName}>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    {varName} <span className="text-red-500">*</span>
+                    {varName} <span className="text-destructive">*</span>
                   </label>
                   <Input
                     placeholder={`请输入${varName}`}
@@ -162,22 +169,21 @@ export function VariableForm({
               </CardContent>
             )}
           </Card>
-
-          {/* 操作按钮 */}
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={onClose}>
-              取消
-            </Button>
-            <Button 
-              onClick={handleApply}
-              disabled={!isFormValid()}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              应用模版
-            </Button>
-          </div>
         </div>
-      </div>
-    </Modal>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
+          <Button
+            onClick={handleApply}
+            disabled={!isFormValid()}
+          >
+            <Check className="h-4 w-4 mr-2" />
+            应用模版
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

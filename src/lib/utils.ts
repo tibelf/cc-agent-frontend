@@ -87,46 +87,46 @@ export function formatPercentage(value: number, precision: number = 1) {
 }
 
 /**
- * 获取任务状态颜色
+ * 获取任务状态颜色 - 使用语义化颜色
  */
 export function getTaskStateColor(state: string) {
   const colors = {
-    pending: 'text-yellow-600 bg-yellow-50',
-    processing: 'text-blue-600 bg-blue-50',
-    paused: 'text-orange-600 bg-orange-50',
-    waiting_unban: 'text-purple-600 bg-purple-50',
-    retrying: 'text-indigo-600 bg-indigo-50',
-    completed: 'text-green-600 bg-green-50',
-    failed: 'text-red-600 bg-red-50',
-    needs_human_review: 'text-pink-600 bg-pink-50',
-    awaiting_confirmation: 'text-teal-600 bg-teal-50',
+    pending: 'text-warning-foreground bg-warning/20',
+    processing: 'text-info-foreground bg-info/20',
+    paused: 'text-warning-foreground bg-warning/30',
+    waiting_unban: 'text-muted-foreground bg-muted',
+    retrying: 'text-info-foreground bg-info/30',
+    completed: 'text-success-foreground bg-success/20',
+    failed: 'text-destructive-foreground bg-destructive/20',
+    needs_human_review: 'text-warning-foreground bg-warning/20',
+    awaiting_confirmation: 'text-info-foreground bg-info/20',
   }
-  return colors[state as keyof typeof colors] || 'text-gray-600 bg-gray-50'
+  return colors[state as keyof typeof colors] || 'text-muted-foreground bg-muted'
 }
 
 /**
- * 获取优先级颜色
+ * 获取优先级颜色 - 使用语义化颜色
  */
 export function getPriorityColor(priority: string) {
   const colors = {
-    low: 'text-gray-600 bg-gray-50',
-    normal: 'text-blue-600 bg-blue-50',
-    high: 'text-orange-600 bg-orange-50',
-    urgent: 'text-red-600 bg-red-50',
+    low: 'text-muted-foreground bg-muted',
+    normal: 'text-info-foreground bg-info/20',
+    high: 'text-warning-foreground bg-warning/20',
+    urgent: 'text-destructive-foreground bg-destructive/20',
   }
-  return colors[priority as keyof typeof colors] || 'text-gray-600 bg-gray-50'
+  return colors[priority as keyof typeof colors] || 'text-muted-foreground bg-muted'
 }
 
 /**
- * 获取系统状态颜色
+ * 获取系统状态颜色 - 使用语义化颜色
  */
 export function getSystemStatusColor(status: string) {
   const colors = {
-    healthy: 'text-green-600 bg-green-50',
-    warning: 'text-yellow-600 bg-yellow-50',
-    critical: 'text-red-600 bg-red-50',
+    healthy: 'text-success-foreground bg-success/20',
+    warning: 'text-warning-foreground bg-warning/20',
+    critical: 'text-destructive-foreground bg-destructive/20',
   }
-  return colors[status as keyof typeof colors] || 'text-gray-600 bg-gray-50'
+  return colors[status as keyof typeof colors] || 'text-muted-foreground bg-muted'
 }
 
 /**

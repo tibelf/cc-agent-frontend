@@ -3,11 +3,18 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Modal } from '@/components/ui/modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Save,
   AlertCircle
 } from 'lucide-react'
@@ -21,20 +28,20 @@ interface TemplateFormProps {
   onSuccess?: () => void
 }
 
-export function TemplateForm({ 
-  isOpen, 
-  onClose, 
-  template, 
-  onSuccess 
+export function TemplateForm({
+  isOpen,
+  onClose,
+  template,
+  onSuccess
 }: TemplateFormProps) {
   const { create, update, extractVariables, validateTemplate } = useTaskTemplates()
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     prompt_template: ''
   })
-  
+
   const [errors, setErrors] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -66,25 +73,25 @@ export function TemplateForm({
   // 验证表单
   const validateForm = () => {
     const newErrors: string[] = []
-    
+
     if (!formData.name.trim()) {
       newErrors.push('请填写模版名称')
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.push('请填写模版描述')
     }
-    
+
     if (!formData.prompt_template.trim()) {
       newErrors.push('请填写模版内容')
     }
-    
+
     // 验证模版格式
     const templateValidation = validateTemplate(formData.prompt_template)
     if (!templateValidation.isValid) {
       newErrors.push(...templateValidation.errors)
     }
-    
+
     setErrors(newErrors)
     return newErrors.length === 0
   }
@@ -92,11 +99,11 @@ export function TemplateForm({
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
-    
+
     setIsSubmitting(true)
-    
+
     try {
       if (template) {
         // 更新模版
@@ -118,7 +125,7 @@ export function TemplateForm({
         }
         create(createRequest)
       }
-      
+
       onSuccess?.()
       onClose()
     } catch (error) {
@@ -131,16 +138,16 @@ export function TemplateForm({
 
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
-      <div className="p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
             {template ? '编辑模版' : '创建新模版'}
-          </h2>
-          <p className="text-sm text-muted-foreground">
+          </DialogTitle>
+          <DialogDescription>
             {template ? '修改模版信息和内容' : '创建一个新的任务描述模版'}
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 基本信息 */}
@@ -151,7 +158,7 @@ export function TemplateForm({
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  模版名称 <span className="text-red-500">*</span>
+                  模版名称 <span className="text-destructive">*</span>
                 </label>
                 <Input
                   placeholder="例如：Bug修复模版"
@@ -159,10 +166,10 @@ export function TemplateForm({
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  模版描述 <span className="text-red-500">*</span>
+                  模版描述 <span className="text-destructive">*</span>
                 </label>
                 <Input
                   placeholder="简要描述这个模版的用途"
@@ -215,11 +222,11 @@ export function TemplateForm({
 
           {/* 错误信息 */}
           {errors.length > 0 && (
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border-destructive/50 bg-destructive/10">
               <CardContent className="pt-6">
                 <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-red-800">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-destructive">
                     <p className="font-medium mb-1">请修正以下问题：</p>
                     <ul className="list-disc list-inside space-y-1">
                       {errors.map((error, index) => (
@@ -232,21 +239,20 @@ export function TemplateForm({
             </Card>
           )}
 
-          {/* 操作按钮 */}
-          <div className="flex justify-end space-x-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               取消
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
               {isSubmitting ? '保存中...' : (template ? '更新模版' : '创建模版')}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   )
 }

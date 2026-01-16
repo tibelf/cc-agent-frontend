@@ -31,7 +31,7 @@ const TASK_TYPES = [
     description: '简单任务，可以从头重新开始',
     permissions: ['Read', 'Grep', 'Glob'],
     examples: ['代码分析', '简单查询', '文档生成'],
-    color: 'bg-blue-50 text-blue-800 border-blue-200'
+    color: 'bg-info/10 text-info border-info/30'
   },
   {
     value: 'medium_context',
@@ -39,7 +39,7 @@ const TASK_TYPES = [
     description: '需要部分历史记录的任务',
     permissions: ['Read', 'Write', 'Edit', 'Git', 'MCP工具'],
     examples: ['代码重构', 'Bug修复', '功能实现'],
-    color: 'bg-yellow-50 text-yellow-800 border-yellow-200'
+    color: 'bg-warning/10 text-warning border-warning/30'
   },
   {
     value: 'heavy_context',
@@ -47,15 +47,15 @@ const TASK_TYPES = [
     description: '需要完整执行历史的复杂任务',
     permissions: ['Read', 'Write', 'Edit', 'Bash', 'WebFetch', '全部MCP工具'],
     examples: ['大规模重构', '系统优化', '复杂分析'],
-    color: 'bg-red-50 text-red-800 border-red-200'
+    color: 'bg-destructive/10 text-destructive border-destructive/30'
   }
 ]
 
 const PRIORITIES = [
-  { value: 'low', label: '低优先级', color: 'text-gray-600 bg-gray-50' },
-  { value: 'normal', label: '普通', color: 'text-blue-600 bg-blue-50' },
-  { value: 'high', label: '高优先级', color: 'text-orange-600 bg-orange-50' },
-  { value: 'urgent', label: '紧急', color: 'text-red-600 bg-red-50' }
+  { value: 'low', label: '低优先级', color: 'text-muted-foreground bg-muted' },
+  { value: 'normal', label: '普通', color: 'text-info bg-info/10' },
+  { value: 'high', label: '高优先级', color: 'text-warning bg-warning/10' },
+  { value: 'urgent', label: '紧急', color: 'text-destructive bg-destructive/10' }
 ]
 
 // 常用的cron表达式示例
@@ -166,7 +166,7 @@ export default function CreateTaskPage() {
 
   // 生成Claude命令或定时任务信息
   const generateCommand = () => {
-    if (!formData.name || !formData.description) return ''
+    if (!formData.description) return ''
 
     if (formData.is_scheduled) {
       // 定时任务信息
@@ -197,8 +197,8 @@ provide specific instructions for manual completion instead of asking for confir
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.description) {
-      alert('请填写任务名称和描述')
+    if (!formData.description) {
+      alert('请填写任务描述')
       return
     }
 
@@ -352,7 +352,7 @@ provide specific instructions for manual completion instead of asking for confir
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-medium text-foreground">
-                    任务描述 <span className="text-red-500">*</span>
+                    任务描述 <span className="text-destructive">*</span>
                   </label>
                   <Button
                     type="button"
@@ -408,7 +408,7 @@ provide specific instructions for manual completion instead of asking for confir
                     id="auto_execute"
                     checked={formData.auto_execute}
                     onChange={(e) => setFormData({ ...formData, auto_execute: e.target.checked })}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    className="rounded border-border text-primary focus:ring-primary"
                   />
                   <div className="flex-1">
                     <label htmlFor="auto_execute" className="text-sm font-medium text-foreground cursor-pointer">
@@ -431,7 +431,7 @@ provide specific instructions for manual completion instead of asking for confir
                       is_scheduled: e.target.checked,
                       cron_expression: e.target.checked ? formData.cron_expression : ''
                     })}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    className="rounded border-border text-primary focus:ring-primary"
                   />
                   <div className="flex-1">
                     <label htmlFor="is_scheduled" className="text-sm font-medium text-foreground cursor-pointer flex items-center">
@@ -450,18 +450,18 @@ provide specific instructions for manual completion instead of asking for confir
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
-                        Cron表达式 <span className="text-red-500">*</span>
+                        Cron表达式 <span className="text-destructive">*</span>
                       </label>
                       <Input
                         placeholder="例如: 0 9 * * 1-5 (工作日上午9点)"
                         value={formData.cron_expression || ''}
                         onChange={(e) => setFormData({ ...formData, cron_expression: e.target.value })}
-                        className={`${formData.cron_expression && !validateCronExpression(formData.cron_expression).valid 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
+                        className={`${formData.cron_expression && !validateCronExpression(formData.cron_expression).valid
+                          ? 'border-destructive/50 focus:border-destructive focus:ring-destructive/20'
                           : ''}`}
                       />
                       {formData.cron_expression && !validateCronExpression(formData.cron_expression).valid && (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-destructive mt-1">
                           {validateCronExpression(formData.cron_expression).error}
                         </p>
                       )}
@@ -627,7 +627,7 @@ provide specific instructions for manual completion instead of asking for confir
                     {Object.entries(formData.environment || {}).map(([key, value]) => (
                       <div key={key} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
                         <span>{key} = {value}</span>
-                        <button type="button" onClick={() => removeEnvVar(key)} className="text-red-500 hover:text-red-700">
+                        <button type="button" onClick={() => removeEnvVar(key)} className="text-destructive hover:text-destructive/80">
                           ×
                         </button>
                       </div>
@@ -664,14 +664,14 @@ provide specific instructions for manual completion instead of asking for confir
             <CardContent className="pt-0">
               <div className="bg-muted p-3 rounded-lg">
                 <code className="text-sm whitespace-pre-wrap break-all">
-                  {generateCommand() || '请先填写任务名称和描述'}
+                  {generateCommand() || '请先填写任务描述'}
                 </code>
               </div>
               {selectedTaskType && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div className="mt-4 p-3 bg-info/10 rounded-lg">
                   <div className="flex items-start space-x-2">
-                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-800">
+                    <Info className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-info">
                       <div className="font-medium mb-1">任务类型说明：{selectedTaskType.label}</div>
                       <div className="mb-2">{selectedTaskType.description}</div>
                       <div className="text-xs">
@@ -690,15 +690,15 @@ provide specific instructions for manual completion instead of asking for confir
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {formData.name && formData.description ? (
-                  <span className="flex items-center text-green-600">
+                {formData.description ? (
+                  <span className="flex items-center text-success">
                     <CheckCircle className="h-4 w-4 mr-1" />
                     任务配置已完成
                   </span>
                 ) : (
-                  <span className="flex items-center text-orange-600">
+                  <span className="flex items-center text-warning">
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    请完善任务基本信息
+                    请填写任务描述
                   </span>
                 )}
               </div>
@@ -706,13 +706,12 @@ provide specific instructions for manual completion instead of asking for confir
                 <Link href="/tasks">
                   <Button variant="outline">取消</Button>
                 </Link>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={
-                    !formData.name || 
-                    !formData.description || 
+                    !formData.description ||
                     (formData.is_scheduled && (!formData.cron_expression || !validateCronExpression(formData.cron_expression).valid)) ||
-                    createTaskMutation.isPending || 
+                    createTaskMutation.isPending ||
                     addScheduledTaskMutation.isPending
                   }
                 >

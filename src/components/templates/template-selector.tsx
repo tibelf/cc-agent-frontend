@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Modal } from '@/components/ui/modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -35,15 +41,15 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
-      <div className="p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground">选择任务模版</h2>
-          <p className="text-sm text-muted-foreground">选择一个模版快速创建任务</p>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>选择任务模版</DialogTitle>
+          <DialogDescription>选择一个模版快速创建任务</DialogDescription>
+        </DialogHeader>
 
         {/* 搜索框 */}
-        <div className="relative mb-6">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="搜索模版..."
@@ -54,7 +60,7 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
         </div>
 
         {/* 模版列表 */}
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="space-y-4 max-h-96 overflow-y-auto flex-1">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               加载中...
@@ -65,8 +71,8 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
             </div>
           ) : (
             filteredTemplates.map((template) => (
-              <Card 
-                key={template.id} 
+              <Card
+                key={template.id}
                 className="cursor-pointer hover:bg-accent transition-colors"
                 onClick={() => handleSelectTemplate(template)}
               >
@@ -82,11 +88,11 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
                           </Badge>
                         )}
                       </div>
-                      
+
                       <p className="text-sm text-muted-foreground mb-3">
                         {template.description}
                       </p>
-                      
+
                       {template.variables.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           <span className="text-xs text-muted-foreground">变量:</span>
@@ -97,7 +103,7 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
                           ))}
                         </div>
                       )}
-                      
+
                       <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                         <span className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
@@ -105,7 +111,7 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
                         </span>
                       </div>
                     </div>
-                    
+
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </CardContent>
@@ -113,7 +119,7 @@ export function TemplateSelector({ isOpen, onClose, onSelectTemplate }: Template
             ))
           )}
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   )
 }
