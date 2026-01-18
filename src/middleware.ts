@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
 // 不需要认证的路径（不包含 basePath）
-const publicPaths = ['/login', '/api/auth/login']
+const publicPaths = ['/login', '/api/auth/login', '/api/templates']
 
 // basePath 需要硬编码，因为 middleware 运行在 Edge Runtime
 // 必须与 next.config.ts 中的 basePath 保持一致
