@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,6 +40,7 @@ const PRIORITIES = [
 ]
 
 export default function TasksPage() {
+  const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -434,7 +436,7 @@ export default function TasksPage() {
           }}
           emptyText={tasksError ? `加载任务失败: ${tasksError.message}` : '没有找到符合条件的任务'}
           rowKey="id"
-          onItemClick={(task) => window.location.href = `/tasks/${task.id}`}
+          onItemClick={(task) => router.push(`/tasks/${task.id}`)}
           layout="list"
         />
       )}

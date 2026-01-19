@@ -93,7 +93,7 @@ function DefaultErrorFallback({ error, retry }: DefaultErrorFallbackProps) {
           <RefreshCw className="h-4 w-4 mr-2" />
           重试
         </Button>
-        <Button onClick={() => window.location.href = '/'} variant="outline">
+        <Button onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/`} variant="outline">
           <Home className="h-4 w-4 mr-2" />
           回到首页
         </Button>
@@ -332,7 +332,7 @@ export function NotFound({
       <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
       <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
       {showHomeButton && (
-        <Button onClick={() => window.location.href = '/'} variant="default">
+        <Button onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/`} variant="default">
           <Home className="h-4 w-4 mr-2" />
           回到首页
         </Button>
