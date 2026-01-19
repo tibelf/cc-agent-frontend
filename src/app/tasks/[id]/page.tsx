@@ -25,67 +25,11 @@ import {
   Loader2
 } from 'lucide-react'
 import { formatDateTime, formatRelativeTime, formatDuration, getTaskStateColor, getPriorityColor } from '@/lib/utils'
-import { Task, TaskState, TaskType, TaskPriority, ProcessState } from '@/types'
-import { useTask, useTaskAction } from '@/hooks/use-tasks'
+import { TaskState } from '@/types'
+import { useCLITask, useCLITaskLogs, useCLITaskAction } from '@/hooks/use-cli-tasks'
+import type { CLITask } from '@/services/cli-service'
 import { useWebSocket, useTaskStatus, useTaskLogs as useRealtimeTaskLogs } from '@/hooks/use-websocket'
 import { ConnectionStatus } from '@/services/websocket'
-
-// 模拟任务数据
-const mockTask: Task = {
-  id: 'task_001',
-  name: '重构用户认证模块',
-  description: '提高代码安全性，重构认证模块使其更加安全和易维护。这是一个复杂的重构任务，需要仔细处理现有的认证逻辑，确保不会破坏现有功能的同时提升系统安全性。',
-  task_type: TaskType.MEDIUM_CONTEXT,
-  priority: TaskPriority.HIGH,
-  task_state: TaskState.PROCESSING,
-  process_state: ProcessState.RUNNING,
-  command: 'claude -p "请帮我重构用户认证模块，提高代码安全性" --permission-mode acceptEdits --allowedTools "Read" "Write" "Edit" "Git"',
-  working_dir: '/path/to/project',
-  environment: {
-    NODE_ENV: 'development',
-    DEBUG: 'true'
-  },
-  auto_execute: true,
-  confirmation_strategy: 'auto_yes',
-  retry_count: 1,
-  max_retries: 5,
-  checkpoint_data: {
-    session_id: 'session_abc123',
-    last_saved: new Date().toISOString(),
-    progress: 0.65
-  },
-  created_at: new Date(Date.now() - 3600000).toISOString(),
-  started_at: new Date(Date.now() - 1800000).toISOString(),
-  next_allowed_at: undefined,
-  tags: ['认证', '安全', '重构', '高优先级'],
-  assigned_worker: 'worker_01',
-  last_error: undefined,
-  error_history: [
-    {
-      timestamp: new Date(Date.now() - 900000).toISOString(),
-      type: 'warning',
-      message: 'Session timeout warning - extending session'
-    }
-  ]
-}
-
-const mockLogs = [
-  '[2024-01-20 14:30:15] Task started: 重构用户认证模块',
-  '[2024-01-20 14:30:16] Analyzing current authentication structure...',
-  '[2024-01-20 14:30:18] Found 5 authentication-related files',
-  '[2024-01-20 14:30:20] Reading auth/models.py...',
-  '[2024-01-20 14:30:22] Reading auth/views.py...',
-  '[2024-01-20 14:30:25] Identifying security vulnerabilities...',
-  '[2024-01-20 14:30:28] Found potential issue in password validation',
-  '[2024-01-20 14:30:30] Proposing security improvements...',
-  '[2024-01-20 14:30:35] Refactoring authentication middleware...',
-  '[2024-01-20 14:30:38] Adding input validation...',
-  '[2024-01-20 14:30:42] Implementing rate limiting...',
-  '[2024-01-20 14:30:45] Creating unit tests for new auth logic...',
-  '[2024-01-20 14:30:48] Running security audit...',
-  '[2024-01-20 14:30:52] 📋 Progress: 65% completed',
-  '[2024-01-20 14:30:55] Current operation: Updating documentation...'
-]
 
 export default function TaskDetailPage() {
   const params = useParams()
@@ -93,37 +37,37 @@ export default function TaskDetailPage() {
 
   // WebSocket连接状态
   const { connectionStatus, isConnected, connect } = useWebSocket()
-  
-  // 获取任务基础数据
-  const { data: baseTask } = useTask(taskId)
-  
+
+  // 获取任务基础数据 (使用 CLI hook)
+  const { data: cliTask, isLoading, error } = useCLITask(taskId)
+
+  // 获取任务日志 (使用 CLI hook)
+  const { data: cliLogs = [] } = useCLITaskLogs(taskId)
+
   // 实时任务状态
   const { taskStatus: realtimeStatus } = useTaskStatus(taskId)
-  
+
   // 实时日志流
   const { logs: realtimeLogs, isAutoScroll, clearLogs, toggleAutoScroll } = useRealtimeTaskLogs(taskId)
-  
-  // 任务操作
-  const taskActionMutation = useTaskAction()
 
-  // 合并静态数据和实时数据
-  const task = baseTask?.data ? {
-    ...baseTask.data,
+  // 任务操作 (使用 CLI hook)
+  const taskActionMutation = useCLITaskAction()
+
+  // 合并 CLI 数据和实时数据
+  const task: CLITask | null = cliTask ? {
+    ...cliTask,
     // 如果有实时状态更新，使用实时数据覆盖
     ...(realtimeStatus ? {
-      task_state: realtimeStatus.status as TaskState,
-      checkpoint_data: {
-        ...baseTask.data.checkpoint_data,
-        progress: realtimeStatus.progress || baseTask.data.checkpoint_data?.progress || 0
-      },
-      last_error: realtimeStatus.error || baseTask.data.last_error
+      task_state: realtimeStatus.status || cliTask.task_state,
+      last_error: realtimeStatus.error || cliTask.last_error
     } : {})
-  } : mockTask // 回退到模拟数据
-  
-  // 使用实时日志或回退到模拟数据
-  const logs = realtimeLogs.length > 0 ? realtimeLogs.map(log => 
-    `[${new Date(log.timestamp).toLocaleString()}] ${log.message}`
-  ) : mockLogs
+  } : null
+
+  // 使用 CLI 日志或实时日志
+  const logs = cliLogs.length > 0 ? cliLogs :
+               realtimeLogs.length > 0 ? realtimeLogs.map(log =>
+                 `[${new Date(log.timestamp).toLocaleString()}] ${log.message}`
+               ) : []
 
   const [isLogsVisible, setIsLogsVisible] = useState(true)
 
@@ -148,7 +92,7 @@ export default function TaskDetailPage() {
     try {
       await taskActionMutation.mutateAsync({
         taskId,
-        request: { action }
+        action
       })
     } catch (error) {
       console.error(`Failed to ${action} task:`, error)
@@ -192,11 +136,31 @@ export default function TaskDetailPage() {
     return labels[type as keyof typeof labels] || type
   }
 
-  if (!task) {
+  // 加载状态
+  if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl font-bold text-muted-foreground mb-2">任务未找到</div>
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+          <div className="text-muted-foreground">加载任务详情...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // 错误或任务不存在
+  if (error || !task) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-muted-foreground mb-2">
+            {error ? '加载失败' : '任务未找到'}
+          </div>
+          {error && (
+            <div className="text-sm text-destructive mb-4">
+              {(error as Error).message || '获取任务详情时发生错误'}
+            </div>
+          )}
           <Link href="/tasks">
             <Button variant="outline">返回任务列表</Button>
           </Link>
@@ -282,7 +246,7 @@ export default function TaskDetailPage() {
             </Button>
           )}
           
-          {[TaskState.FAILED, TaskState.COMPLETED].includes(task.task_state) && (
+          {[TaskState.FAILED, TaskState.COMPLETED].includes(task.task_state as TaskState) && (
             <Button 
               variant="outline" 
               size="sm"
@@ -347,18 +311,19 @@ export default function TaskDetailPage() {
                 </div>
               )}
               
-              {typeof task.checkpoint_data?.progress === 'number' && task.checkpoint_data.progress > 0 && (
+              {/* 进度信息 - 从实时状态获取 */}
+              {realtimeStatus?.progress !== undefined && realtimeStatus.progress > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-muted-foreground">进度</span>
                     <span className="text-sm font-medium">
-                      {Math.round((task.checkpoint_data.progress as number) * 100)}%
+                      {Math.round(realtimeStatus.progress * 100)}%
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(task.checkpoint_data.progress as number) * 100}%` }}
+                      style={{ width: `${realtimeStatus.progress * 100}%` }}
                     />
                   </div>
                 </div>
@@ -409,86 +374,46 @@ export default function TaskDetailPage() {
                 <div className="pt-3 border-t">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">重试次数</span>
-                    <span className="text-sm font-medium">{task.retry_count}/{task.max_retries}</span>
+                    <span className="text-sm font-medium">{task.retry_count}</span>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="h-4 w-4" />
-                <span>配置信息</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {task.working_dir && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">工作目录</div>
-                  <code className="text-xs bg-muted p-1 rounded">{task.working_dir}</code>
+          {/* Tags */}
+          {task.tags && task.tags.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="h-4 w-4" />
+                  <span>标签</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-1">
+                  {task.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
-              )}
-              
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">自动执行</div>
-                <Badge variant={task.auto_execute ? "default" : "outline"}>
-                  {task.auto_execute ? '已启用' : '未启用'}
-                </Badge>
-              </div>
-              
-              {Object.keys(task.environment).length > 0 && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">环境变量</div>
-                  <div className="space-y-1">
-                    {Object.entries(task.environment).map(([key, value]) => (
-                      <div key={key} className="text-xs bg-muted p-2 rounded">
-                        <span className="font-medium">{key}</span> = {value}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {task.tags.length > 0 && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">标签</div>
-                  <div className="flex flex-wrap gap-1">
-                    {task.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Error History */}
-          {task.error_history.length > 0 && (
+          {/* Last Error */}
+          {task.last_error && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <AlertTriangle className="h-4 w-4 text-orange-500" />
-                  <span>错误历史</span>
+                  <span>最近错误</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {task.error_history.map((error, index) => (
-                    <div key={index} className="p-2 bg-orange-50 rounded text-sm">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium capitalize">{error.type}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDateTime(error.timestamp)}
-                        </span>
-                      </div>
-                      <div className="text-orange-800">{error.message}</div>
-                    </div>
-                  ))}
+                <div className="p-3 bg-destructive/10 rounded text-sm text-destructive">
+                  {task.last_error}
                 </div>
               </CardContent>
             </Card>
@@ -498,38 +423,42 @@ export default function TaskDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>任务描述</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-foreground leading-relaxed">
-                {task.description}
-              </p>
-            </CardContent>
-          </Card>
+          {task.description && (
+            <Card>
+              <CardHeader>
+                <CardTitle>任务描述</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {task.description}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Command */}
-          <Card>
-            <CardHeader>
-              <CardTitle>执行命令</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                  <code>{task.command}</code>
-                </pre>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => copyToClipboard(task.command)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {task.command && (
+            <Card>
+              <CardHeader>
+                <CardTitle>执行命令</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
+                    <code>{task.command}</code>
+                  </pre>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => task.command && copyToClipboard(task.command)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Real-time Logs */}
           <Card>
