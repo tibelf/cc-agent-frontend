@@ -6,10 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CC-Agent Frontend is a Next.js 15 web application providing a management interface for the Claude Code automation task execution system. It connects to a FastAPI backend at `~/Github/cc-agent`.
 
+**Important**: This app uses basePath `/cc` - all routes are prefixed (e.g., `http://localhost:3000/cc/tasks`).
+
 ## Commands
 
 ```bash
-npm run dev          # Development server on localhost:3000
+npm run dev          # Development server on localhost:3000/cc
 npm run build        # Production build
 npm run start        # Production server
 npm run lint         # ESLint
@@ -27,19 +29,21 @@ cd ~/Github/cc-agent && ./start_api_server.sh
 - **API**: Axios with interceptors (`src/lib/api-client.ts`)
 - **Real-time**: Socket.io-client for WebSocket
 - **Styling**: Tailwind CSS v4 + shadcn/ui + Radix UI primitives + Lucide icons
+- **Auth**: JWT with jose library, bcryptjs for password hashing
 - **Path alias**: `@/*` maps to `./src/*`
 
 ## Architecture
 
 ```
 src/
-├── app/           # Next.js App Router pages + /api/cli route
-├── components/    # React components (ui/ for reusables)
+├── app/           # Next.js App Router pages + /api routes
+├── components/    # React components (ui/ for shadcn components)
 ├── hooks/         # React Query hooks wrapping services
 ├── services/      # API service layers (static methods)
 ├── types/         # TypeScript definitions (enums, interfaces)
 ├── lib/           # API client, React Query provider, utils
-└── stores/        # Zustand stores (minimal usage)
+├── stores/        # Zustand stores (minimal usage)
+└── middleware.ts  # JWT auth middleware (Edge Runtime)
 ```
 
 ### Data Flow Pattern
@@ -59,6 +63,7 @@ When adding features:
 - Query keys are hierarchical: `['tasks', 'list', params]`, `['tasks', 'detail', id]`
 - Refetch intervals: tasks list (1min), task details (30s), logs (5s)
 - Stale time: 10-60 seconds depending on data volatility
+- Default retry: 3 times (skips 4xx errors)
 
 ### Key Types
 
@@ -72,18 +77,29 @@ When adding features:
 ## Backend Integration
 
 - **Fixed backend path**: `~/Github/cc-agent` (hardcoded in `/api/cli` route)
-- **CLI route**: `/app/api/cli/route.ts` executes `taskctl.py` commands only (security-restricted)
-- **Auth**: JWT tokens stored in localStorage as `auth_token`, auto-injected in request headers
+- **CLI route**: `src/app/api/cli/route.ts` executes `taskctl.py` commands only (security-restricted)
+- **Auth**: JWT tokens stored in localStorage (`auth_token`) and cookie, auto-injected in request headers
+
+## Authentication
+
+- Middleware (`src/middleware.ts`) protects all routes except `/login`, `/api/auth/login`, `/api/templates`
+- JWT verified using `jose` library with `AUTH_JWT_SECRET` env var
+- Token stored in both localStorage and cookie (24h expiry)
+- User credentials in `config/auth.json` (bcrypt hashed passwords)
 
 ## Environment Variables
 
-```
+```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_WS_URL=ws://localhost:8080
+AUTH_JWT_SECRET=<your-secret>        # Required for JWT signing
+CC_AGENT_PATH=~/Github/cc-agent      # Backend path for CLI route
+PYTHON_CMD=python3.11                # Python command for CLI
 ```
 
 ## Routes
 
+All routes are prefixed with `/cc` (basePath):
 - `/` - Dashboard
 - `/tasks` - Task list, create, detail views
 - `/templates` - Task templates
@@ -91,6 +107,7 @@ NEXT_PUBLIC_WS_URL=ws://localhost:8080
 - `/monitoring` - System metrics and alerts
 - `/security` - Audit logs and permissions
 - `/settings` - Configuration
+- `/login` - Authentication (public)
 
 ## WebSocket Events
 
@@ -152,3 +169,12 @@ Located in `src/components/ui/`:
 - `label`, `separator` - 表单辅助
 - `switch` - 开关
 - `sonner` (Toaster) - Toast通知
+
+## Utility Functions
+
+Key utilities in `src/lib/utils.ts`:
+- `cn()` - Tailwind class merging (clsx + tailwind-merge)
+- `formatDateTime()`, `formatBeijingDateTime()` - Date formatting (GMT+8)
+- `formatRelativeTime()` - Relative time display
+- `getTaskStateColor()`, `getPriorityColor()` - Status color helpers
+- `copyToClipboard()`, `debounce()`, `throttle()` - Common utilities
