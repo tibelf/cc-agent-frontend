@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CC-Agent Frontend is a Next.js 15 web application providing a management interface for the Claude Code automation task execution system. It connects to a FastAPI backend at `~/Github/cc-agent`.
+CC-Agent Frontend is a Next.js 15 web application providing a management interface for the Claude Code automation task execution system. It interacts with the backend CLI tool (`taskctl.py`) through Next.js API routes.
 
 **Important**: This app uses basePath `/cc` - all routes are prefixed (e.g., `http://localhost:3000/cc/tasks`).
 
@@ -15,9 +15,6 @@ npm run dev          # Development server on localhost:3000/cc
 npm run build        # Production build
 npm run start        # Production server
 npm run lint         # ESLint
-
-# Backend (required for frontend to work)
-cd ~/Github/cc-agent && ./start_api_server.sh
 ```
 
 **Note**: No test framework is configured.
@@ -26,8 +23,7 @@ cd ~/Github/cc-agent && ./start_api_server.sh
 
 - **Framework**: Next.js 15 with App Router, React 19, TypeScript (strict mode)
 - **State**: React Query v5 (server state) + Zustand v5 (client state, minimal usage)
-- **API**: Axios with interceptors (`src/lib/api-client.ts`)
-- **Real-time**: Socket.io-client for WebSocket
+- **CLI Integration**: Next.js API routes calling `taskctl.py` via child process
 - **Styling**: Tailwind CSS v4 + shadcn/ui + Radix UI primitives + Lucide icons
 - **Auth**: JWT with jose library, bcryptjs for password hashing
 - **Path alias**: `@/*` maps to `./src/*`
@@ -39,9 +35,9 @@ src/
 ├── app/           # Next.js App Router pages + /api routes
 ├── components/    # React components (ui/ for shadcn components)
 ├── hooks/         # React Query hooks wrapping services
-├── services/      # API service layers (static methods)
+├── services/      # CLI service layers (static methods)
 ├── types/         # TypeScript definitions (enums, interfaces)
-├── lib/           # API client, React Query provider, utils
+├── lib/           # React Query provider, utils
 ├── stores/        # Zustand stores (minimal usage)
 └── middleware.ts  # JWT auth middleware (Edge Runtime)
 ```
@@ -49,12 +45,12 @@ src/
 ### Data Flow Pattern
 
 ```
-Component → Hook (React Query) → Service → API Client → Backend
+Component → Hook (React Query) → CLI Service → /api/cli → taskctl.py → JSON response
 ```
 
 When adding features:
 1. Define types in `src/types/index.ts`
-2. Create service in `src/services/`
+2. Create or update service in `src/services/cli.ts`
 3. Wrap with React Query hook in `src/hooks/`
 4. Build component with error handling
 
@@ -74,11 +70,26 @@ When adding features:
 // API responses wrap data in ApiResponse<T> or PaginatedResponse<T>
 ```
 
-## Backend Integration
+## CLI Integration
 
-- **Fixed backend path**: `~/Github/cc-agent` (hardcoded in `/api/cli` route)
-- **CLI route**: `src/app/api/cli/route.ts` executes `taskctl.py` commands only (security-restricted)
-- **Auth**: JWT tokens stored in localStorage (`auth_token`) and cookie, auto-injected in request headers
+The frontend communicates with the backend exclusively through CLI commands:
+
+- **CLI route**: `src/app/api/cli/route.ts` executes `taskctl.py` commands
+- **CLI service**: `src/services/cli.ts` wraps CLI calls with type-safe methods
+- **Security**: Only `taskctl.py` commands are allowed (whitelist approach)
+- **Backend path**: Configured via `CC_AGENT_PATH` env var (default: `~/Github/cc-agent`)
+
+### Available CLI Commands
+
+```bash
+taskctl.py list              # List tasks with filters
+taskctl.py get <id>          # Get task details
+taskctl.py create            # Create new task
+taskctl.py pause <id>        # Pause task
+taskctl.py resume <id>       # Resume task
+taskctl.py cancel <id>       # Cancel task
+taskctl.py logs <id>         # Get task logs
+```
 
 ## Authentication
 
@@ -90,11 +101,9 @@ When adding features:
 ## Environment Variables
 
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8080
 AUTH_JWT_SECRET=<your-secret>        # Required for JWT signing
 CC_AGENT_PATH=~/Github/cc-agent      # Backend path for CLI route
-PYTHON_CMD=python3.11                # Python command for CLI
+PYTHON_CMD=python3.11                # Python command for CLI (optional)
 ```
 
 ## Routes
@@ -108,13 +117,6 @@ All routes are prefixed with `/cc` (basePath):
 - `/security` - Audit logs and permissions
 - `/settings` - Configuration
 - `/login` - Authentication (public)
-
-## WebSocket Events
-
-- `task_updated` - Task state changes
-- `worker_status` - Worker performance updates
-- `system_alert` - System notifications
-- `log_update` - Real-time log streaming
 
 ## UI Component Patterns (shadcn/ui)
 
